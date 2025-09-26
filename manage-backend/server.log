@@ -1,0 +1,101 @@
+2025/09/26 20:32:32 Using config file: /mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/config/config.yaml
+2025/09/26 20:32:32 Running migrations for environment: development
+2025/09/26 20:32:32 Running auto migration...
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:36
+[0m[33m[1.257ms] [34;1m[rows:0][0m CREATE SCHEMA IF NOT EXISTS manage_dev
+2025/09/26 20:32:32 Schema manage_dev created or already exists
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[4.309ms] [34;1m[rows:1][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND table_type = 'BASE TABLE'
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[1.128ms] [34;1m[rows:1][0m SELECT CURRENT_DATABASE()
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[10.464ms] [34;1m[rows:-][0m SELECT c.column_name, c.is_nullable = 'YES', c.udt_name, c.character_maximum_length, c.numeric_precision, c.numeric_precision_radix, c.numeric_scale, c.datetime_precision, 8 * typlen, c.column_default, pd.description, c.identity_increment FROM information_schema.columns AS c JOIN pg_type AS pgt ON c.udt_name = pgt.typname LEFT JOIN pg_catalog.pg_description as pd ON pd.objsubid = c.ordinal_position AND pd.objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = c.table_name AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = c.table_schema)) where table_catalog = 'go_manage_starter' AND table_schema = CURRENT_SCHEMA() AND table_name = 'users'
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[0.874ms] [34;1m[rows:-][0m SELECT * FROM "users" LIMIT 5
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[9.214ms] [34;1m[rows:-][0m SELECT constraint_name FROM information_schema.table_constraints tc JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_catalog, table_name, constraint_name) JOIN information_schema.columns AS c ON c.table_schema = tc.constraint_schema AND tc.table_name = c.table_name AND ccu.column_name = c.column_name WHERE constraint_type IN ('PRIMARY KEY', 'UNIQUE') AND c.table_catalog = 'go_manage_starter' AND c.table_schema = CURRENT_SCHEMA() AND c.table_name = 'users' AND constraint_type = 'UNIQUE'
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[6.964ms] [34;1m[rows:-][0m SELECT c.column_name, constraint_name, constraint_type FROM information_schema.table_constraints tc JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_catalog, table_name, constraint_name) JOIN information_schema.columns AS c ON c.table_schema = tc.constraint_schema AND tc.table_name = c.table_name AND ccu.column_name = c.column_name WHERE constraint_type IN ('PRIMARY KEY', 'UNIQUE') AND c.table_catalog = 'go_manage_starter' AND c.table_schema = CURRENT_SCHEMA() AND c.table_name = 'users'
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[1.212ms] [34;1m[rows:-][0m SELECT a.attname as column_name, format_type(a.atttypid, a.atttypmod) AS data_type
+		FROM pg_attribute a JOIN pg_class b ON a.attrelid = b.oid AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA())
+		WHERE a.attnum > 0 -- hide internal columns
+		AND NOT a.attisdropped -- hide deleted columns
+		AND b.relname = 'users'
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[2.710ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'id') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[1.459ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'username') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[1.497ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'email') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[1.913ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'password') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[1.663ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'role') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[1.920ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'status') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[0.693ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'created_at') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[0.558ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'updated_at') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[0.575ms] [34;1m[rows:0][0m SELECT description FROM pg_catalog.pg_description WHERE objsubid = (SELECT ordinal_position FROM information_schema.columns WHERE table_schema = CURRENT_SCHEMA() AND table_name = 'users' AND column_name = 'deleted_at') AND objoid = (SELECT oid FROM pg_catalog.pg_class WHERE relname = 'users' AND relnamespace = (SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = CURRENT_SCHEMA()))
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[2.265ms] [34;1m[rows:1][0m SELECT count(*) FROM pg_indexes WHERE tablename = 'users' AND indexname = 'idx_users_username' AND schemaname = CURRENT_SCHEMA()
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[0.876ms] [34;1m[rows:1][0m SELECT count(*) FROM pg_indexes WHERE tablename = 'users' AND indexname = 'idx_users_email' AND schemaname = CURRENT_SCHEMA()
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/migrate.go:43
+[0m[33m[1.101ms] [34;1m[rows:1][0m SELECT count(*) FROM pg_indexes WHERE tablename = 'users' AND indexname = 'idx_users_deleted_at' AND schemaname = CURRENT_SCHEMA()
+2025/09/26 20:32:32 Auto migration completed successfully
+2025/09/26 20:32:32 Seeding database for environment: development
+2025/09/26 20:32:32 Seeding development data...
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/seeder.go:47
+[0m[33m[2.231ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE username = 'admin' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2025/09/26 20:32:32 Admin user already exists
+
+2025/09/26 20:32:32 [32m/mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/pkg/database/seeder.go:67
+[0m[33m[0.771ms] [34;1m[rows:1][0m SELECT * FROM "users" WHERE username = 'testuser' AND "users"."deleted_at" IS NULL ORDER BY "users"."id" LIMIT 1
+2025/09/26 20:32:32 Test user already exists
+2025/09/26 20:32:32 Development data seeding completed
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+2025/09/26 20:32:32 Using config file: /mnt/d/Desktop/cover-maker-win/go-manage-starter/manage-backend/config/config.yaml
+[GIN-debug] GET    /api/v1/public/users/:id  --> github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/handler.(*PublicUserHandler).GetUser-fm (4 handlers)
+[GIN-debug] GET    /api/v1/public/users      --> github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/handler.(*PublicUserHandler).ListUsers-fm (4 handlers)
+[GIN-debug] POST   /api/v1/auth/register     --> github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/handler.(*UserHandler).Register-fm (4 handlers)
+[GIN-debug] POST   /api/v1/auth/login        --> github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/handler.(*UserHandler).Login-fm (4 handlers)
+[GIN-debug] GET    /api/v1/users/profile     --> github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/handler.(*UserHandler).GetProfile-fm (5 handlers)
+[GIN-debug] PUT    /api/v1/users/profile     --> github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/handler.(*UserHandler).UpdateProfile-fm (5 handlers)
+[GIN-debug] GET    /api/v1/users             --> github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/handler.(*UserHandler).ListUsers-fm (5 handlers)
+[GIN-debug] GET    /swagger/*any             --> github.com/swaggo/gin-swagger.CustomWrapHandler.func1 (4 handlers)
+[GIN-debug] GET    /health                   --> main.main.func1 (4 handlers)
+2025/09/26 20:32:32 Server starting on port 8080
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :8080
+[GIN-debug] [ERROR] listen tcp :8080: bind: address already in use
+2025/09/26 20:32:32 Failed to start server:listen tcp :8080: bind: address already in use
+exit status 1
