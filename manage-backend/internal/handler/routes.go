@@ -22,6 +22,15 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB) {
 
 	// Initialize handlers
 	userHandler := NewUserHandler(userService)
+	publicUserHandler := NewPublicUserHandler(userService)
+
+	// Public routes (no authentication required)
+	public := router.Group("/public")
+	{
+		// Public user routes
+		public.GET("/users/:id", publicUserHandler.GetUser)
+		public.GET("/users", publicUserHandler.ListUsers)
+	}
 
 	// Auth routes (no authentication required)
 	auth := router.Group("/auth")
