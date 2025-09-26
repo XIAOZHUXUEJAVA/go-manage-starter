@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourname/go-manage-starter/pkg/auth"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/auth"
 )
 
 func JWTAuth(jwtManager *auth.JWTManager) gin.HandlerFunc {

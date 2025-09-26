@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/yourname/go-manage-starter/internal/config"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
 )
 
 type RedisClient struct {

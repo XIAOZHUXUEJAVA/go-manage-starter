@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"gorm.io/gorm"
-	"github.com/yourname/go-manage-starter/internal/model"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/model"
 )
 
 // ResetDatabase 重置数据库（删除所有表）

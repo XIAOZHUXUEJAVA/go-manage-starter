@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/yourname/go-manage-starter/internal/config"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

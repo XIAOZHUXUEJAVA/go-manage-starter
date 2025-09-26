@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourname/go-manage-starter/internal/model"
-	"github.com/yourname/go-manage-starter/internal/service"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/model"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/service"
 )
 
 type UserHandler struct {

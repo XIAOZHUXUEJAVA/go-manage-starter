@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yourname/go-manage-starter/pkg/database"
-	"github.com/yourname/go-manage-starter/test/helpers"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/database"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/test/helpers"
 )
 
 func TestDatabaseConnection(t *testing.T) {

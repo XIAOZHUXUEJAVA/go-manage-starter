@@ -3,10 +3,10 @@ package service
 import (
 	"errors"
 
-	"github.com/yourname/go-manage-starter/internal/model"
-	"github.com/yourname/go-manage-starter/internal/repository"
-	"github.com/yourname/go-manage-starter/internal/utils"
-	"github.com/yourname/go-manage-starter/pkg/auth"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/model"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/repository"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/utils"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/auth"
 	"gorm.io/gorm"
 )
 

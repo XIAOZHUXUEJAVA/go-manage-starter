@@ -3,11 +3,11 @@ package main
 import (
 	"log"
 
-	"github.com/yourname/go-manage-starter/internal/config"
-	"github.com/yourname/go-manage-starter/internal/handler"
-	"github.com/yourname/go-manage-starter/internal/middleware"
-	"github.com/yourname/go-manage-starter/pkg/database"
-	"github.com/yourname/go-manage-starter/pkg/logger"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/handler"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/middleware"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/database"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"

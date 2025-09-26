@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/yourname/go-manage-starter/internal/model"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/model"
 	"gorm.io/gorm"
 )
 

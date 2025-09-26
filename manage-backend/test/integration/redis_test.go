@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yourname/go-manage-starter/internal/config"
-	"github.com/yourname/go-manage-starter/pkg/cache"
-	"github.com/yourname/go-manage-starter/test/helpers"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/cache"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/test/helpers"
 )
 
 func TestRedisConnection(t *testing.T) {

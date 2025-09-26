@@ -6,8 +6,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/yourname/go-manage-starter/internal/config"
-	"github.com/yourname/go-manage-starter/pkg/database"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/database"
 )
 
 func main() {

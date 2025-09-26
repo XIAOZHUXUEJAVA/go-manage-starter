@@ -9,9 +9,9 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	"github.com/yourname/go-manage-starter/internal/config"
-	"github.com/yourname/go-manage-starter/pkg/cache"
-	"github.com/yourname/go-manage-starter/pkg/database"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/cache"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/database"
 	"gorm.io/gorm"
 )
 

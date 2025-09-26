@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"github.com/yourname/go-manage-starter/internal/config"
-	"github.com/yourname/go-manage-starter/internal/model"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/model"
 )
 
 // RunMigrations 根据环境运行不同的迁移策略

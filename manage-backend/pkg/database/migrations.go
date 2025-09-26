@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"gorm.io/gorm"
-	"github.com/yourname/go-manage-starter/internal/model"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/model"
 )
 
 // Migration 迁移定义

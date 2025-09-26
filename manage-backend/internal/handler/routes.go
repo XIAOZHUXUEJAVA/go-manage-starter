@@ -2,11 +2,11 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/yourname/go-manage-starter/internal/config"
-	"github.com/yourname/go-manage-starter/internal/middleware"
-	"github.com/yourname/go-manage-starter/internal/repository"
-	"github.com/yourname/go-manage-starter/internal/service"
-	"github.com/yourname/go-manage-starter/pkg/auth"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/middleware"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/repository"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/service"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/auth"
 	"gorm.io/gorm"
 )
 

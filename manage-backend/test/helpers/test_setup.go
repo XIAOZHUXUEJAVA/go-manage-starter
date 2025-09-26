@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/yourname/go-manage-starter/internal/config"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
 )
 
 // SetupTestEnvironment initializes the test environment and returns a clean config

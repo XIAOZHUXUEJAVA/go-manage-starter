@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"gorm.io/gorm"
-	"github.com/yourname/go-manage-starter/internal/model"
-	"github.com/yourname/go-manage-starter/internal/utils"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/model"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/utils"
 )
 
 // SeedDatabase 根据环境种子数据库
