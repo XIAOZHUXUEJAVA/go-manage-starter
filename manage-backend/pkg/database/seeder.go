@@ -83,8 +83,51 @@ func seedDevelopmentData(db *gorm.DB) error {
 func seedTestData(db *gorm.DB) error {
 	log.Println("Seeding test data...")
 	
-	// 测试环境通常不需要预设数据
-	// 测试会自己创建需要的数据
+	// 创建测试管理员用户
+	hashedPassword, err := utils.HashPassword("test123")
+	if err != nil {
+		return err
+	}
+	
+	admin := &model.User{
+		Username: "testadmin",
+		Email:    "testadmin@example.com",
+		Password: hashedPassword,
+		Role:     "admin",
+		Status:   "active",
+	}
+	
+	// 使用 FirstOrCreate 避免重复创建
+	result := db.Where("username = ?", admin.Username).FirstOrCreate(admin)
+	if result.Error != nil {
+		return result.Error
+	}
+	
+	if result.RowsAffected > 0 {
+		log.Println("Created test admin user: testadmin/test123")
+	} else {
+		log.Println("Test admin user already exists")
+	}
+	
+	// 创建测试普通用户
+	testUser := &model.User{
+		Username: "testuser",
+		Email:    "testuser@example.com",
+		Password: hashedPassword,
+		Role:     "user",
+		Status:   "active",
+	}
+	
+	result = db.Where("username = ?", testUser.Username).FirstOrCreate(testUser)
+	if result.Error != nil {
+		return result.Error
+	}
+	
+	if result.RowsAffected > 0 {
+		log.Println("Created test user: testuser/test123")
+	} else {
+		log.Println("Test user already exists")
+	}
 	
 	log.Println("Test data seeding completed")
 	return nil

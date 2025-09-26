@@ -50,16 +50,38 @@ func main() {
 		log.Fatal("Failed to run migrations:", err)
 	}
 
-	// Run seed data (only in development environment)
-	if cfg.Environment == "development" {
+	// Run seed data based on environment
+	switch cfg.Environment {
+	case "development":
+		log.Println("🌱 Seeding development data...")
 		if err := database.SeedDatabase(db, cfg.Environment); err != nil {
 			log.Fatal("Failed to seed database:", err)
 		}
+	case "test":
+		log.Println("🧪 Seeding test data...")
+		if err := database.SeedDatabase(db, cfg.Environment); err != nil {
+			log.Fatal("Failed to seed database:", err)
+		}
+	case "production":
+		log.Println("🏭 Checking production data...")
+		if err := database.SeedDatabase(db, cfg.Environment); err != nil {
+			log.Fatal("Failed to seed database:", err)
+		}
+	default:
+		log.Printf("⚠️  Unknown environment: %s, skipping seeding", cfg.Environment)
 	}
 
-	// Initialize Gin router
-	if cfg.Environment == "production" {
+	// Initialize Gin router with environment-specific settings
+	switch cfg.Environment {
+	case "production":
 		gin.SetMode(gin.ReleaseMode)
+		log.Println("🏭 Running in production mode")
+	case "test":
+		gin.SetMode(gin.TestMode)
+		log.Println("🧪 Running in test mode")
+	default:
+		gin.SetMode(gin.DebugMode)
+		log.Println("🔧 Running in development mode")
 	}
 
 	router := gin.New()

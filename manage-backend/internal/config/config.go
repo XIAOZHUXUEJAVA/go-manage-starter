@@ -71,22 +71,21 @@ func Load() *Config {
 	viper.SetConfigType("yaml")
 	
 	// Add config paths based on environment
+	// All config files are in the same ./config directory
 	if environment == "test" {
 		viper.SetConfigName("test")
-		viper.AddConfigPath("./test/config")
-		viper.AddConfigPath("../test/config") // For when running from subdirectories
-		viper.AddConfigPath("../../test/config") // For deeper nested calls
 	} else if environment == "production" {
 		viper.SetConfigName("production")
-		viper.AddConfigPath("./config")
-		viper.AddConfigPath("../config")
 	} else {
 		// Default to development
 		viper.SetConfigName("config")
-		viper.AddConfigPath("./config")
-		viper.AddConfigPath("../config")
-		viper.AddConfigPath(".") // Fallback to current directory
 	}
+	
+	// Add config paths (same for all environments)
+	viper.AddConfigPath("./config")
+	viper.AddConfigPath("../config")        // For when running from subdirectories
+	viper.AddConfigPath("../../config")     // For deeper nested calls (like tests)
+	viper.AddConfigPath(".")                // Fallback to current directory
 
 	// Read config file if exists
 	if err := viper.ReadInConfig(); err != nil {

@@ -4,18 +4,32 @@ import (
 	"errors"
 
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/model"
-	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/repository"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/utils"
-	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/auth"
 	"gorm.io/gorm"
 )
 
-type UserService struct {
-	userRepo   *repository.UserRepository
-	jwtManager *auth.JWTManager
+// UserRepositoryInterface defines the interface for user repository
+type UserRepositoryInterface interface {
+	Create(user *model.User) error
+	GetByID(id uint) (*model.User, error)
+	GetByUsername(username string) (*model.User, error)
+	GetByEmail(email string) (*model.User, error)
+	Update(user *model.User) error
+	Delete(id uint) error
+	List(offset, limit int) ([]model.User, int64, error)
 }
 
-func NewUserService(userRepo *repository.UserRepository, jwtManager *auth.JWTManager) *UserService {
+// JWTManagerInterface defines the interface for JWT manager
+type JWTManagerInterface interface {
+	GenerateToken(userID uint, username, role string) (string, error)
+}
+
+type UserService struct {
+	userRepo   UserRepositoryInterface
+	jwtManager JWTManagerInterface
+}
+
+func NewUserService(userRepo UserRepositoryInterface, jwtManager JWTManagerInterface) *UserService {
 	return &UserService{
 		userRepo:   userRepo,
 		jwtManager: jwtManager,
@@ -78,9 +92,21 @@ func (s *UserService) Login(req *model.LoginRequest) (*model.LoginResponse, erro
 		return nil, err
 	}
 
+	// Create a safe user response without password
+	safeUser := model.User{
+		ID:        user.ID,
+		Username:  user.Username,
+		Email:     user.Email,
+		Role:      user.Role,
+		Status:    user.Status,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		// Password field is intentionally omitted for security
+	}
+
 	return &model.LoginResponse{
 		Token: token,
-		User:  *user,
+		User:  safeUser,
 	}, nil
 }
 
