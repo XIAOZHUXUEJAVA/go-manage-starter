@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   AudioWaveform,
   BookOpen,
@@ -12,19 +12,23 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
-} from "lucide-react"
+  Users,
+  LayoutDashboard,
+  Database,
+  Shield,
+} from "lucide-react";
 
-import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
-import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
+import { NavMain } from "@/components/nav-main";
+import { NavProjects } from "@/components/nav-projects";
+import { NavUser } from "@/components/nav-user";
+import { TeamSwitcher } from "@/components/team-switcher";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 // This is sample data.
 const data = {
@@ -52,109 +56,101 @@ const data = {
   ],
   navMain: [
     {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
+      title: "仪表板",
+      url: "/dashboard",
+      icon: LayoutDashboard,
       isActive: true,
       items: [
         {
-          title: "History",
-          url: "#",
+          title: "概览",
+          url: "/dashboard",
         },
         {
-          title: "Starred",
-          url: "#",
+          title: "统计",
+          url: "/dashboard/analytics",
         },
         {
-          title: "Settings",
-          url: "#",
+          title: "报告",
+          url: "/dashboard/reports",
         },
       ],
     },
     {
-      title: "Models",
-      url: "#",
-      icon: Bot,
+      title: "用户管理",
+      url: "/dashboard/usersmanage",
+      icon: Users,
       items: [
         {
-          title: "Genesis",
-          url: "#",
+          title: "用户列表",
+          url: "/dashboard/usersmanage",
         },
         {
-          title: "Explorer",
-          url: "#",
+          title: "用户角色",
+          url: "/dashboard/usersmanage/roles",
         },
         {
-          title: "Quantum",
-          url: "#",
+          title: "权限管理",
+          url: "/dashboard/usersmanage/permissions",
         },
       ],
     },
     {
-      title: "Documentation",
+      title: "数据管理",
       url: "#",
-      icon: BookOpen,
+      icon: Database,
       items: [
         {
-          title: "Introduction",
-          url: "#",
+          title: "数据导入",
+          url: "/dashboard/data/import",
         },
         {
-          title: "Get Started",
-          url: "#",
+          title: "数据导出",
+          url: "/dashboard/data/export",
         },
         {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
+          title: "数据备份",
+          url: "/dashboard/data/backup",
         },
       ],
     },
     {
-      title: "Settings",
+      title: "系统设置",
       url: "#",
       icon: Settings2,
       items: [
         {
-          title: "General",
-          url: "#",
+          title: "基本设置",
+          url: "/dashboard/settings/general",
         },
         {
-          title: "Team",
-          url: "#",
+          title: "安全设置",
+          url: "/dashboard/settings/security",
         },
         {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
+          title: "通知设置",
+          url: "/dashboard/settings/notifications",
         },
       ],
     },
   ],
   projects: [
     {
-      name: "Design Engineering",
-      url: "#",
+      name: "系统监控",
+      url: "/dashboard/monitoring",
       icon: Frame,
     },
     {
-      name: "Sales & Marketing",
-      url: "#",
+      name: "数据分析",
+      url: "/dashboard/analytics",
       icon: PieChart,
     },
     {
-      name: "Travel",
-      url: "#",
+      name: "日志管理",
+      url: "/dashboard/logs",
       icon: Map,
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -171,5 +167,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }
