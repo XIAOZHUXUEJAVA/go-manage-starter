@@ -11,6 +11,7 @@ import (
 )
 
 func Init(cfg config.Database) (*gorm.DB, error) {
+	// 构建 DSN，如果指定了模式则添加 search_path
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
 		cfg.Host,
 		cfg.User,
@@ -18,6 +19,11 @@ func Init(cfg config.Database) (*gorm.DB, error) {
 		cfg.Name,
 		cfg.Port,
 	)
+	
+	// 如果指定了非默认模式，添加到 search_path
+	if cfg.Schema != "" && cfg.Schema != "public" {
+		dsn += fmt.Sprintf(" search_path=%s", cfg.Schema)
+	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),

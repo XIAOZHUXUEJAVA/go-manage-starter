@@ -57,13 +57,42 @@ clean:
 swagger:
 	swag init -g cmd/server/main.go -o docs
 
-# Run database migrations up
+# 数据库迁移 (使用 GORM)
 migrate-up:
-	migrate -path migrations -database "postgres://postgres:@localhost:5432/go_manage_starter?sslmode=disable" up
+	@echo "Running database migrations..."
+	@ENVIRONMENT=development go run cmd/migrate/main.go -action=up
 
-# Run database migrations down
 migrate-down:
-	migrate -path migrations -database "postgres://postgres:@localhost:5432/go_manage_starter?sslmode=disable" down
+	@echo "Rolling back migration..."
+	@ENVIRONMENT=development go run cmd/migrate/main.go -action=down -id=$(id)
+
+migrate-status:
+	@echo "Checking migration status..."
+	@ENVIRONMENT=development go run cmd/migrate/main.go -action=status
+
+migrate-reset:
+	@echo "Resetting database..."
+	@ENVIRONMENT=development go run cmd/migrate/main.go -action=reset
+
+# 数据库种子数据
+seed:
+	@echo "Seeding database..."
+	@ENVIRONMENT=development go run cmd/seed/main.go -action=seed
+
+seed-clean:
+	@echo "Cleaning database..."
+	@ENVIRONMENT=development go run cmd/seed/main.go -action=clean
+
+seed-reset:
+	@echo "Resetting and seeding database..."
+	@ENVIRONMENT=development go run cmd/seed/main.go -action=reset
+
+# 数据库完整设置
+db-setup: migrate-up seed
+	@echo "Database setup completed"
+
+db-reset: migrate-reset seed
+	@echo "Database reset completed"
 
 # Install dependencies
 deps:

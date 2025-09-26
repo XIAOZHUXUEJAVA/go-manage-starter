@@ -8,6 +8,7 @@ DB_PORT: 5432
 DB_USER: xiaozhu
 DB_PASSWORD: 12345679
 DB_NAME: go_manage_starter
+DB_SCHEMA: manage_dev
 
 # Development Redis configuration
 REDIS_HOST: localhost

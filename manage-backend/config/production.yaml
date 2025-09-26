@@ -8,6 +8,7 @@ DB_PORT: 5432
 DB_USER: your_prod_user
 DB_PASSWORD: your_prod_password
 DB_NAME: go_manage_starter_prod
+DB_SCHEMA: manage_prod
 
 # Production Redis configuration
 REDIS_HOST: localhost

@@ -22,6 +22,7 @@ type Database struct {
 	User     string `mapstructure:"DB_USER"`
 	Password string `mapstructure:"DB_PASSWORD"`
 	Name     string `mapstructure:"DB_NAME"`
+	Schema   string `mapstructure:"DB_SCHEMA"`
 }
 
 type Redis struct {
@@ -58,6 +59,7 @@ func Load() *Config {
 	viper.SetDefault("DB_USER", "postgres")
 	viper.SetDefault("DB_PASSWORD", "")
 	viper.SetDefault("DB_NAME", "go_manage_starter")
+	viper.SetDefault("DB_SCHEMA", "public")
 	viper.SetDefault("REDIS_HOST", "localhost")
 	viper.SetDefault("REDIS_PORT", "6379")
 	viper.SetDefault("REDIS_PASSWORD", "")

@@ -45,6 +45,18 @@ func main() {
 		log.Fatal("Failed to initialize database:", err)
 	}
 
+	// Run database migrations
+	if err := database.RunMigrations(db, cfg); err != nil {
+		log.Fatal("Failed to run migrations:", err)
+	}
+
+	// Run seed data (only in development environment)
+	if cfg.Environment == "development" {
+		if err := database.SeedDatabase(db, cfg.Environment); err != nil {
+			log.Fatal("Failed to seed database:", err)
+		}
+	}
+
 	// Initialize Gin router
 	if cfg.Environment == "production" {
 		gin.SetMode(gin.ReleaseMode)
