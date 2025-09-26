@@ -74,10 +74,16 @@ func Load() *Config {
 		viper.AddConfigPath("./test/config")
 		viper.AddConfigPath("../test/config") // For when running from subdirectories
 		viper.AddConfigPath("../../test/config") // For deeper nested calls
-	} else {
-		viper.SetConfigName("config")
-		viper.AddConfigPath(".")
+	} else if environment == "production" {
+		viper.SetConfigName("production")
 		viper.AddConfigPath("./config")
+		viper.AddConfigPath("../config")
+	} else {
+		// Default to development
+		viper.SetConfigName("config")
+		viper.AddConfigPath("./config")
+		viper.AddConfigPath("../config")
+		viper.AddConfigPath(".") // Fallback to current directory
 	}
 
 	// Read config file if exists

@@ -1,0 +1,20 @@
+ENVIRONMENT: production
+PORT: 8080
+LOG_LEVEL: warn
+
+# Production Database configuration
+DB_HOST: localhost
+DB_PORT: 5432
+DB_USER: your_prod_user
+DB_PASSWORD: your_prod_password
+DB_NAME: go_manage_starter_prod
+
+# Production Redis configuration
+REDIS_HOST: localhost
+REDIS_PORT: 6379
+REDIS_PASSWORD: your_redis_password
+REDIS_DB: 0
+
+# Production JWT configuration
+JWT_SECRET: your-super-secure-jwt-secret-key-for-production
+JWT_EXPIRE_TIME: 24

@@ -33,6 +33,22 @@ test-db:
 test-redis:
 	go test -v ./test/integration/ -run TestRedis
 
+# Test development environment
+test-dev:
+	go test -v ./test/ -run TestDevelopment
+
+# Setup development database
+setup-dev-db:
+	psql -U postgres -h localhost -f scripts/setup-dev-db.sql
+
+# Run development server
+run-dev:
+	ENVIRONMENT=development go run cmd/server/main.go
+
+# Run production server
+run-prod:
+	ENVIRONMENT=production go run cmd/server/main.go
+
 # Clean build artifacts
 clean:
 	rm -rf bin/
