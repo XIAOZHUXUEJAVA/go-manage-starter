@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { UserService } from "@/services/userService";
+import { UserService } from "@/services";
 import {
   User,
   UserListResponse,
@@ -45,17 +45,13 @@ export const useUsers = (initialParams?: PaginationParams): UseUsersReturn => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
-        const response = await UserService.getUserList(queryParams);
+        const response = await UserService.getUsers(queryParams);
 
-        if (
-          response.code === 200 &&
-          response.data &&
-          Array.isArray(response.data)
-        ) {
+        if (response.code === 200 && response.data) {
           setState((prev) => ({
             ...prev,
-            users: response.data as User[], // 确保类型安全
-            pagination: response.pagination || null, // 分页信息在外层
+            users: response.data as User[],
+            pagination: response.pagination || null,
             loading: false,
           }));
         } else {
@@ -125,7 +121,7 @@ export const useUser = (id?: number): UseUserReturn => {
       if (response.code === 200 && response.data) {
         setState((prev) => ({
           ...prev,
-          user: response.data!,
+          user: response.data as User,
           loading: false,
         }));
       } else {

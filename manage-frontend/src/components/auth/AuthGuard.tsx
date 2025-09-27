@@ -61,10 +61,10 @@ export function AuthGuard({
     const isProtected = isProtectedRoute(pathname);
     const isAuth = isAuthRoute(pathname);
 
-    console.log("AuthGuard:", {
+    console.log("🔍 AuthGuard Debug:", {
       pathname,
-      isProtected,
-      isAuth,
+      isProtected: isProtected,
+      isAuth: isAuth,
       isAuthenticated,
       isLoading,
       isInitialized,
@@ -84,6 +84,25 @@ export function AuthGuard({
       return;
     }
 
+    // 如果用户已认证且在认证页面，重定向到 dashboard
+    if (isAuth && isAuthenticated) {
+      console.log(
+        "✅ Authenticated user on auth route, redirecting to dashboard:",
+        pathname
+      );
+      router.push("/dashboard");
+      return;
+    }
+
+    // 如果是认证路由且用户未认证，允许访问
+    if (isAuth && !isAuthenticated) {
+      console.log(
+        "✅ Unauthenticated user on auth route, allowing access:",
+        pathname
+      );
+      return;
+    }
+
     // 认证检查
     if (isProtected && !isAuthenticated) {
       console.log("Redirecting to login...");
@@ -98,12 +117,6 @@ export function AuthGuard({
       );
       router.push("/unauthorized");
       return;
-    }
-
-    // 已认证用户访问认证页面
-    if (isAuth && isAuthenticated) {
-      console.log("Redirecting to dashboard...");
-      router.replace("/dashboard"); // 使用 replace 而不是 push，避免历史记录堆积
     }
   }, [
     isAuthenticated,

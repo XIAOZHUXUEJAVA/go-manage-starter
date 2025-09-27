@@ -27,13 +27,14 @@ export function getTokenFromRequest(request: NextRequest): string | null {
  * 检查是否为受保护的路由
  */
 export function isProtectedRoute(pathname: string): boolean {
-  const protectedRoutes = [
-    "/",
-    "/dashboard",
-    "/users",
-    "/profile",
-    "/settings",
-  ];
+  const protectedRoutes = ["/dashboard", "/users", "/profile", "/settings"];
+
+  // 精确匹配首页
+  if (pathname === "/") {
+    return true;
+  }
+
+  // 其他路由使用 startsWith 匹配
   return protectedRoutes.some((route) => pathname.startsWith(route));
 }
 

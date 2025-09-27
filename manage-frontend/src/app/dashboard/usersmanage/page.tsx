@@ -65,7 +65,7 @@ import {
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { UserManagementTable } from "@/components/user/UserManagementTable";
 import { AddUserModal } from "@/components/user/AddUserModal";
-import { UserService } from "@/services/userService";
+import { UserService } from "@/services";
 import { CreateUserRequest, UpdateUserRequest } from "@/types/api";
 import { toast } from "sonner";
 
@@ -169,6 +169,7 @@ export default function UsersManagePage() {
     setIsUpdating(true);
     try {
       const updateData: UpdateUserRequest = {
+        id: user.id,
         username: user.username,
         email: user.email,
         role: user.role,

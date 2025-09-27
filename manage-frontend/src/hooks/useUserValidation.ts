@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { UserService } from "@/services/userService";
+import { UserService } from "@/services";
 
 // 简单的防抖函数实现
 function debounce<T extends (...args: any[]) => any>(
