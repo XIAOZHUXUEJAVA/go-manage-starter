@@ -1,0 +1,22 @@
+# 开发环境配置
+environment: development
+log_level: info
+
+database:
+  host: localhost
+  port: 5432
+  user: xiaozhu
+  password: 12345679
+  name: go_manage_starter
+  schema: manage_dev
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+
+jwt:
+  secret: dev-jwt-secret-key-change-this-in-production
+  expire_time: 24
+  expire_time: 2h

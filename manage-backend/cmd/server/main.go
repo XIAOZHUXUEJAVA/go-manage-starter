@@ -14,12 +14,12 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// @title Go Manage Starter API
+// @title Go 管理系统启动器 API
 // @version 1.0
-// @description A management system API built with Go and Gin
+// @description 基于 Go 和 Gin 构建的管理系统 API
 // @termsOfService http://swagger.io/terms/
 
-// @contact.name API Support
+// @contact.name API 支持
 // @contact.url http://www.swagger.io/support
 // @contact.email support@swagger.io
 
@@ -33,55 +33,55 @@ import (
 // @in header
 // @name Authorization
 func main() {
-	// Load configuration
+	// 加载配置
 	cfg := config.Load()
 
-	// Initialize logger
+	// 初始化日志器
 	logger.Init(cfg.LogLevel)
 
-	// Initialize database
+	// 初始化数据库
 	db, err := database.Init(cfg.Database)
 	if err != nil {
-		log.Fatal("Failed to initialize database:", err)
+		log.Fatal("数据库初始化失败:", err)
 	}
 
-	// Run database migrations
+	// 运行数据库迁移
 	if err := database.RunMigrations(db, cfg); err != nil {
-		log.Fatal("Failed to run migrations:", err)
+		log.Fatal("数据库迁移失败:", err)
 	}
 
-	// Run seed data based on environment
+	// 根据环境运行种子数据
 	switch cfg.Environment {
 	case "development":
-		log.Println("🌱 Seeding development data...")
+		log.Println("🌱 正在填充开发环境数据...")
 		if err := database.SeedDatabase(db, cfg.Environment); err != nil {
-			log.Fatal("Failed to seed database:", err)
+			log.Fatal("数据库种子数据填充失败:", err)
 		}
 	case "test":
-		log.Println("🧪 Seeding test data...")
+		log.Println("🧪 正在填充测试环境数据...")
 		if err := database.SeedDatabase(db, cfg.Environment); err != nil {
-			log.Fatal("Failed to seed database:", err)
+			log.Fatal("数据库种子数据填充失败:", err)
 		}
 	case "production":
-		log.Println("🏭 Checking production data...")
+		log.Println("🏭 正在检查生产环境数据...")
 		if err := database.SeedDatabase(db, cfg.Environment); err != nil {
-			log.Fatal("Failed to seed database:", err)
+			log.Fatal("数据库种子数据填充失败:", err)
 		}
 	default:
-		log.Printf("⚠️  Unknown environment: %s, skipping seeding", cfg.Environment)
+		log.Printf("⚠️  未知环境: %s, 跳过种子数据填充", cfg.Environment)
 	}
 
-	// Initialize Gin router with environment-specific settings
+	// 根据环境初始化 Gin 路由器设置
 	switch cfg.Environment {
 	case "production":
 		gin.SetMode(gin.ReleaseMode)
-		log.Println("🏭 Running in production mode")
+		log.Println("🏭 运行在生产模式")
 	case "test":
 		gin.SetMode(gin.TestMode)
-		log.Println("🧪 Running in test mode")
+		log.Println("🧪 运行在测试模式")
 	default:
 		gin.SetMode(gin.DebugMode)
-		log.Println("🔧 Running in development mode")
+		log.Println("🔧 运行在开发模式")
 	}
 
 	router := gin.New()
@@ -89,21 +89,21 @@ func main() {
 	router.Use(gin.Recovery())
 	router.Use(middleware.CORS())
 
-	// API routes
+	// API 路由
 	api := router.Group("/api/v1")
 	handler.SetupRoutes(api, db)
 
-	// Swagger documentation
+	// Swagger 文档
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Health check
+	// 健康检查
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
-	// Start server
-	log.Printf("Server starting on port %s", cfg.Port)
+	// 启动服务器
+	log.Printf("服务器正在端口 %s 上启动", cfg.Port)
 	if err := router.Run(":" + cfg.Port); err != nil {
-		log.Fatal("Failed to start server:", err)
+		log.Fatal("服务器启动失败:", err)
 	}
 }

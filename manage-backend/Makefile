@@ -1,4 +1,4 @@
-.PHONY: help build run test test-unit test-integration test-integration-skip test-connection check-connections test-coverage clean dev dev-local dev-test run-prod run-staging migrate seed docs fmt lint security docker-build docker-run docker-stop db-reset setup ci ci-full
+.PHONY: help build run test test-unit test-integration test-integration-skip test-connection test-coverage clean dev dev-local run-test run-prod migrate seed docs fmt lint security docker-build docker-run docker-stop db-reset setup ci ci-full env-check
 
 # Default target
 help:
@@ -11,13 +11,13 @@ help:
 	@echo ""
 	@echo "🚀 Environment-specific startup:"
 	@echo "  dev-local       - Start in LOCAL development environment"
-	@echo "  dev-test        - Start in TEST environment"
+	@echo "  run-test        - Start in TEST environment"
 	@echo "  run-prod        - Start in PRODUCTION environment"
-	@echo "  run-staging     - Start in STAGING environment"
 	@echo ""
 	@echo "🧪 Testing:"
-	@echo "  check-connections - Quick connection check (recommended first step)"
-	@echo "  test-connection - Test database and Redis connections"
+	@echo "  test-connection - Test database and Redis connections (test env)"
+	@echo "  test-connection-dev - Test connections (development env)"
+	@echo "  test-connection-prod - Test connections (production env)"
 	@echo "  test            - Run all tests"
 	@echo "  test-unit       - Run unit tests only"
 	@echo "  test-integration - Run integration tests only (requires database)"
@@ -25,9 +25,16 @@ help:
 	@echo "  test-coverage   - Run tests with coverage report"
 	@echo ""
 	@echo "🗄️  Database:"
-	@echo "  migrate         - Run database migrations"
-	@echo "  seed            - Seed database with sample data"
+	@echo "  migrate         - Run database migrations (development)"
+	@echo "  migrate-test    - Run database migrations (test env)"
+	@echo "  migrate-prod    - Run database migrations (production env)"
+	@echo "  seed            - Seed database with sample data (development)"
+	@echo "  seed-test       - Seed database (test env)"
+	@echo "  seed-prod       - Seed database (production env)"
 	@echo "  db-reset        - Reset database (migrate + seed)"
+	@echo ""
+	@echo "🔧 Environment:"
+	@echo "  env-check       - Check required environment variables"
 	@echo ""
 	@echo "🛠️  Development Tools:"
 	@echo "  docs            - Generate API documentation"
@@ -62,33 +69,26 @@ dev-local:
 	@echo "🚀 Starting in LOCAL development environment..."
 	ENVIRONMENT=development go run ./cmd/server
 
-dev-test:
+run-test: env-check-test
 	@echo "🧪 Starting in TEST environment..."
 	ENVIRONMENT=test go run ./cmd/server
 
-run-prod:
+run-prod: env-check-prod
 	@echo "🏭 Starting in PRODUCTION environment..."
 	ENVIRONMENT=production go run ./cmd/server
 
-run-staging:
-	@echo "🎭 Starting in STAGING environment..."
-	ENVIRONMENT=staging go run ./cmd/server
-
 # Test database and Redis connections
-dev-connection:
-	@echo "🔌 Testing database and Redis connections..."
+test-connection-dev:
+	@echo "🔌 Testing database and Redis connections (development)..."
 	ENVIRONMENT=development go test ./test/connection/... -v
 
-test-connection:
-	@echo "🔌 Testing database and Redis connections..."
+test-connection: env-check-test
+	@echo "🔌 Testing database and Redis connections (test)..."
 	ENVIRONMENT=test go test ./test/connection/... -v
-	
-prod-connection:
-	@echo "🔌 Testing database and Redis connections..."
+
+test-connection-prod: env-check-prod
+	@echo "🔌 Testing database and Redis connections (production)..."
 	ENVIRONMENT=production go test ./test/connection/... -v
-# Quick connection check (using script)
-check-connections:
-	@./scripts/test-connections.sh
 
 # Run all tests
 test:
@@ -116,11 +116,29 @@ test-coverage:
 
 # Run database migrations
 migrate:
-	go run ./cmd/migrate
+	@echo "🗄️ Running database migrations (development)..."
+	ENVIRONMENT=development go run ./cmd/migrate
+
+migrate-test: env-check-test
+	@echo "🗄️ Running database migrations (test)..."
+	ENVIRONMENT=test go run ./cmd/migrate
+
+migrate-prod: env-check-prod
+	@echo "🗄️ Running database migrations (production)..."
+	ENVIRONMENT=production go run ./cmd/migrate
 
 # Seed database with sample data
 seed:
-	go run ./cmd/seed
+	@echo "🌱 Seeding database (development)..."
+	ENVIRONMENT=development go run ./cmd/seed
+
+seed-test: env-check-test
+	@echo "🌱 Seeding database (test)..."
+	ENVIRONMENT=test go run ./cmd/seed
+
+seed-prod: env-check-prod
+	@echo "🌱 Seeding database (production)..."
+	ENVIRONMENT=production go run ./cmd/seed
 
 # Clean build artifacts
 clean:
@@ -164,6 +182,43 @@ setup: test-connection migrate seed
 # CI/CD pipeline simulation (without database)
 ci: fmt lint security test-unit test-integration-skip
 	@echo "CI pipeline completed successfully!"
+
+# Environment variable checks
+env-check:
+	@echo "🔧 Checking environment variables..."
+	@echo "Current environment: $${ENVIRONMENT:-development}"
+
+env-check-test:
+	@echo "🔧 Checking test environment variables..."
+	@if [ -z "$${DB_USER}" ]; then echo "❌ DB_USER is not set"; exit 1; fi
+	@if [ -z "$${DB_PASSWORD}" ]; then echo "❌ DB_PASSWORD is not set"; exit 1; fi
+	@if [ -z "$${JWT_SECRET}" ]; then echo "❌ JWT_SECRET is not set"; exit 1; fi
+	@echo "✅ All required test environment variables are set"
+
+env-check-prod:
+	@echo "🔧 Checking production environment variables..."
+	@if [ -z "$${DB_USER}" ]; then echo "❌ DB_USER is not set"; exit 1; fi
+	@if [ -z "$${DB_PASSWORD}" ]; then echo "❌ DB_PASSWORD is not set"; exit 1; fi
+	@if [ -z "$${JWT_SECRET}" ]; then echo "❌ JWT_SECRET is not set"; exit 1; fi
+	@if [ -z "$${REDIS_PASSWORD}" ]; then echo "❌ REDIS_PASSWORD is not set"; exit 1; fi
+	@echo "✅ All required production environment variables are set"
+
+# Helper commands for environment setup
+env-setup-test:
+	@echo "🔧 Setting up test environment..."
+	@echo "Copy .env.test.example to .env.test and edit it:"
+	@echo "  cp .env.test.example .env.test"
+	@echo "  # Edit .env.test with your values"
+	@echo "  source .env.test"
+	@echo "  make test-connection"
+
+env-setup-prod:
+	@echo "🔧 Setting up production environment..."
+	@echo "Copy .env.production.example to .env.production and edit it:"
+	@echo "  cp .env.production.example .env.production"
+	@echo "  # Edit .env.production with your values"
+	@echo "  source .env.production"
+	@echo "  make test-connection-prod"
 
 # Full CI/CD pipeline (with database)
 ci-full: fmt lint security test-unit test-integration
