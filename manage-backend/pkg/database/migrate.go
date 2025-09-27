@@ -2,17 +2,18 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"gorm.io/gorm"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/model"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/logger"
+	"go.uber.org/zap"
 )
 
 // RunMigrations 根据环境运行不同的迁移策略
 func RunMigrations(db *gorm.DB, cfg *config.Config) error {
-	log.Printf("Running migrations for environment: %s", cfg.Environment)
+	logger.Info("开始运行数据库迁移", zap.String("environment", cfg.Environment))
 	
 	switch cfg.Environment {
 	case "development", "test":
@@ -28,15 +29,15 @@ func RunMigrations(db *gorm.DB, cfg *config.Config) error {
 
 // autoMigrate 自动迁移所有模型
 func autoMigrate(db *gorm.DB, cfg *config.Config) error {
-	log.Println("Running auto migration...")
+	logger.Info("开始自动迁移")
 	
 	// 如果配置了非 public 模式，先创建模式
 	if cfg.Database.Schema != "" && cfg.Database.Schema != "public" {
 		createSchemaSQL := fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", cfg.Database.Schema)
 		if err := db.Exec(createSchemaSQL).Error; err != nil {
-			log.Printf("Warning: Failed to create schema %s: %v", cfg.Database.Schema, err)
+			logger.Warn("创建数据库模式失败", zap.String("schema", cfg.Database.Schema), zap.Error(err))
 		} else {
-			log.Printf("Schema %s created or already exists", cfg.Database.Schema)
+			logger.Info("数据库模式创建成功或已存在", zap.String("schema", cfg.Database.Schema))
 		}
 	}
 	
@@ -49,13 +50,13 @@ func autoMigrate(db *gorm.DB, cfg *config.Config) error {
 		return fmt.Errorf("auto migration failed: %w", err)
 	}
 	
-	log.Println("Auto migration completed successfully")
+	logger.Info("自动迁移完成")
 	return nil
 }
 
 // runVersionedMigrations 运行版本化迁移（生产环境）
 func runVersionedMigrations(db *gorm.DB) error {
-	log.Println("Running versioned migrations...")
+	logger.Info("开始运行版本化迁移")
 	
 	// 创建迁移记录表
 	if err := db.AutoMigrate(&MigrationRecord{}); err != nil {
@@ -82,11 +83,11 @@ func runVersionedMigrations(db *gorm.DB) error {
 				return fmt.Errorf("failed to record migration %s: %w", migration.ID, err)
 			}
 			
-			log.Printf("Migration %s executed successfully", migration.ID)
+			logger.Info("迁移执行成功", zap.String("migration_id", migration.ID))
 		}
 	}
 	
-	log.Println("Versioned migrations completed successfully")
+	logger.Info("版本化迁移完成")
 	return nil
 }
 

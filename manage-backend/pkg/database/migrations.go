@@ -2,10 +2,11 @@ package database
 
 import (
 	"fmt"
-	"log"
 
 	"gorm.io/gorm"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/model"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/logger"
+	"go.uber.org/zap"
 )
 
 // Migration 迁移定义
@@ -42,7 +43,7 @@ func RollbackMigration(db *gorm.DB, migrationID string) error {
 				return fmt.Errorf("failed to remove migration record %s: %w", migrationID, err)
 			}
 			
-			log.Printf("Migration %s rolled back successfully", migrationID)
+			logger.Info("迁移回滚成功", zap.String("migration_id", migrationID))
 			return nil
 		}
 	}

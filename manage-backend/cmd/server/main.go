@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/handler"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/middleware"
@@ -12,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.uber.org/zap"
 )
 
 // @title Go 管理系统启动器 API
@@ -39,31 +38,34 @@ func main() {
 	// 初始化日志器
 	logger.Init(cfg.LogLevel)
 
+	// 记录配置详情
+	config.LogConfigDetails(cfg)
+
 	// 初始化数据库
 	db, err := database.Init(cfg.Database)
 	if err != nil {
-		log.Fatal("数据库初始化失败:", err)
+		logger.Fatal("数据库初始化失败", zap.Error(err))
 	}
 
 	// 运行数据库迁移
 	if err := database.RunMigrations(db, cfg); err != nil {
-		log.Fatal("数据库迁移失败:", err)
+		logger.Fatal("数据库迁移失败", zap.Error(err))
 	}
 
 	// 如需种子数据，可以手动调用: database.SeedDatabase(db, cfg.Environment)
-	log.Println("✅ 数据库连接成功")
+	logger.Info("✅ 数据库连接成功")
 
 	// 根据环境初始化 Gin 路由器设置
 	switch cfg.Environment {
 	case "production":
 		gin.SetMode(gin.ReleaseMode)
-		log.Println("🏭 运行在生产模式")
+		logger.Info("🏭 运行在生产模式", zap.String("environment", cfg.Environment))
 	case "test":
 		gin.SetMode(gin.TestMode)
-		log.Println("🧪 运行在测试模式")
+		logger.Info("🧪 运行在测试模式", zap.String("environment", cfg.Environment))
 	default:
 		gin.SetMode(gin.DebugMode)
-		log.Println("🔧 运行在开发模式")
+		logger.Info("🔧 运行在开发模式", zap.String("environment", cfg.Environment))
 	}
 
 	router := gin.New()
@@ -84,8 +86,8 @@ func main() {
 	})
 
 	// 启动服务器
-	log.Printf("服务器正在端口 %s 上启动", cfg.Port)
+	logger.Info("服务器正在启动", zap.String("port", cfg.Port))
 	if err := router.Run(":" + cfg.Port); err != nil {
-		log.Fatal("服务器启动失败:", err)
+		logger.Fatal("服务器启动失败", zap.Error(err))
 	}
 }

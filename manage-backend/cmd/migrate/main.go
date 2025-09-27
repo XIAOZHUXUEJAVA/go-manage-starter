@@ -3,11 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/database"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/logger"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -18,32 +19,35 @@ func main() {
 	// 加载配置
 	cfg := config.Load()
 	
+	// 初始化日志器
+	logger.Init(cfg.LogLevel)
+	
 	// 连接数据库
 	db, err := database.Init(cfg.Database)
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		logger.Fatal("数据库连接失败", zap.Error(err))
 	}
 	
 	switch *action {
 	case "up":
 		if err := database.RunMigrations(db, cfg); err != nil {
-			log.Fatal("Migration failed:", err)
+			logger.Fatal("数据库迁移失败", zap.Error(err))
 		}
 		fmt.Println("✅ Migrations completed successfully")
 		
 	case "down":
 		if *migrationID == "" {
-			log.Fatal("Migration ID is required for rollback")
+			logger.Fatal("回滚操作需要迁移ID")
 		}
 		if err := database.RollbackMigration(db, *migrationID); err != nil {
-			log.Fatal("Rollback failed:", err)
+			logger.Fatal("迁移回滚失败", zap.String("migration_id", *migrationID), zap.Error(err))
 		}
 		fmt.Printf("✅ Migration %s rolled back successfully\n", *migrationID)
 		
 	case "status":
 		status, err := database.GetMigrationStatus(db)
 		if err != nil {
-			log.Fatal("Failed to get migration status:", err)
+			logger.Fatal("获取迁移状态失败", zap.Error(err))
 		}
 		
 		fmt.Println("Migration Status:")
@@ -71,17 +75,17 @@ func main() {
 		
 		// 删除所有表
 		if err := database.ResetDatabase(db); err != nil {
-			log.Fatal("Database reset failed:", err)
+			logger.Fatal("数据库重置失败", zap.Error(err))
 		}
 		
 		// 重新运行迁移
 		if err := database.RunMigrations(db, cfg); err != nil {
-			log.Fatal("Migration after reset failed:", err)
+			logger.Fatal("重置后迁移失败", zap.Error(err))
 		}
 		
 		fmt.Println("✅ Database reset and migrations completed successfully")
 		
 	default:
-		log.Fatal("Unknown action:", *action)
+		logger.Fatal("未知操作", zap.String("action", *action))
 	}
 }

@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/spf13/viper"
@@ -60,9 +59,10 @@ func Load() *Config {
 	// 步骤1：加载基础配置文件 (config.yaml)
 	viper.SetConfigName("config")
 	if err := viper.ReadInConfig(); err != nil {
-		log.Printf("警告: 未找到基础配置文件，使用默认值: %v", err)
+		// 在日志器初始化之前，使用简单的输出
+		fmt.Printf("警告: 未找到基础配置文件，使用默认值: %v\n", err)
 	} else {
-		log.Printf("已加载基础配置: %s", viper.ConfigFileUsed())
+		fmt.Printf("已加载基础配置: %s\n", viper.ConfigFileUsed())
 	}
 
 	// 步骤2：合并环境特定配置
@@ -70,9 +70,9 @@ func Load() *Config {
 	viper.SetConfigName(envConfigName)
 	
 	if err := viper.MergeInConfig(); err != nil {
-		log.Printf("警告: 未找到环境 '%s' 的配置文件: %v", environment, err)
+		fmt.Printf("警告: 未找到环境 '%s' 的配置文件: %v\n", environment, err)
 	} else {
-		log.Printf("已合并环境配置: %s", viper.ConfigFileUsed())
+		fmt.Printf("已合并环境配置: %s\n", viper.ConfigFileUsed())
 	}
 
 	// 步骤3：使用环境变量覆盖配置
@@ -94,35 +94,12 @@ func Load() *Config {
 
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
-		log.Fatal("无法解码配置:", err)
+		// 配置解码失败是致命错误，使用 panic
+		panic(fmt.Sprintf("无法解码配置: %v", err))
 	}
 
 	// 在配置中设置环境类型
 	config.Environment = environment
-
-	// 临时调试：打印运行时配置
-	log.Printf("🔧 运行时配置详情:")
-	log.Printf("   环境: %s", config.Environment)
-	log.Printf("   端口: %s", config.Port)
-	log.Printf("   日志级别: %s", config.LogLevel)
-	log.Printf("   数据库: %s@%s:%s/%s (schema: %s)", 
-		config.Database.User, config.Database.Host, config.Database.Port, 
-		config.Database.Name, config.Database.Schema)
-	log.Printf("   Redis: %s:%s (DB: %d, 密码: %s)", 
-		config.Redis.Host, config.Redis.Port, config.Redis.DB, 
-		func() string {
-			if config.Redis.Password == "" {
-				return "无"
-			}
-			return "***已设置***"
-		}())
-	log.Printf("   JWT: 密钥=%s, 过期时间=%s", 
-		func() string {
-			if config.JWT.Secret == "" {
-				return "未设置"
-			}
-			return "***已设置***"
-		}(), config.JWT.ExpireTime)
 
 	return &config
 }

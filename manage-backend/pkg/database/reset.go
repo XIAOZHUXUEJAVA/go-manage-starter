@@ -1,15 +1,17 @@
 package database
 
 import (
-	"log"
+	"fmt"
 
 	"gorm.io/gorm"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/model"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/logger"
+	"go.uber.org/zap"
 )
 
 // ResetDatabase 重置数据库（删除所有表）
 func ResetDatabase(db *gorm.DB) error {
-	log.Println("Resetting database...")
+	logger.Info("开始重置数据库")
 	
 	// 获取所有表名
 	tables := []string{
@@ -22,9 +24,9 @@ func ResetDatabase(db *gorm.DB) error {
 	for _, table := range tables {
 		if db.Migrator().HasTable(table) {
 			if err := db.Migrator().DropTable(table); err != nil {
-				log.Printf("Warning: Failed to drop table %s: %v", table, err)
+				logger.Warn("删除表失败", zap.String("table", table), zap.Error(err))
 			} else {
-				log.Printf("Dropped table: %s", table)
+				logger.Info("删除表成功", zap.String("table", table))
 			}
 		}
 	}
@@ -38,10 +40,10 @@ func ResetDatabase(db *gorm.DB) error {
 	
 	for _, model := range models {
 		if err := db.Migrator().DropTable(model); err != nil {
-			log.Printf("Warning: Failed to drop table for model %T: %v", model, err)
+			logger.Warn("删除模型表失败", zap.String("model", fmt.Sprintf("%T", model)), zap.Error(err))
 		}
 	}
 	
-	log.Println("Database reset completed")
+	logger.Info("数据库重置完成")
 	return nil
 }
