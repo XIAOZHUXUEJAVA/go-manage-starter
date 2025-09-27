@@ -10,6 +10,23 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
+// 请求拦截器 - 添加认证 token
+apiClient.interceptors.request.use(
+  (config) => {
+    // 从 localStorage 获取 token
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("auth-token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // 响应拦截器 - 统一处理响应
 apiClient.interceptors.response.use(
   (response: AxiosResponse<APIResponse>) => {
@@ -23,6 +40,15 @@ apiClient.interceptors.response.use(
       message: error.response?.data?.message || error.message || "请求失败",
       error: error.response?.data?.error,
     };
+
+    // 401 未授权 - 清除本地认证信息
+    if (error.response?.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("auth-token");
+        // 重定向到登录页面
+        window.location.href = "/login";
+      }
+    }
 
     // 可以在这里添加全局错误处理逻辑
     console.error("API Error:", apiError);

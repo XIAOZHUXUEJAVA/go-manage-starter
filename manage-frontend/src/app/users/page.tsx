@@ -2,10 +2,11 @@
 
 import React, { useState } from "react";
 import { useUsers } from "@/hooks/useUsers";
-import { UserCard } from "@/components/UserCard";
-import { Pagination } from "@/components/Pagination";
-import { LoadingSpinner, ErrorMessage } from "@/components/LoadingSpinner";
-import { UserDetailModal } from "@/components/UserDetailModal";
+import { UserCard } from "@/components/user/UserCard";
+import { Pagination } from "@/components/common/Pagination";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { UserDetailModal } from "@/components/user/UserDetailModal";
 import { User } from "@/types/api";
 
 /**
@@ -111,7 +112,17 @@ export default function UsersPage() {
           {/* 错误状态 */}
           {error && !loading && (
             <div className="p-6">
-              <ErrorMessage error={error} onRetry={refetch} />
+              <Alert variant="destructive">
+                <AlertDescription>
+                  加载失败: {error.message}
+                  <button
+                    onClick={refetch}
+                    className="ml-2 underline hover:no-underline"
+                  >
+                    重试
+                  </button>
+                </AlertDescription>
+              </Alert>
             </div>
           )}
 

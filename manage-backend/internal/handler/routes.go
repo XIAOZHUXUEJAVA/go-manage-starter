@@ -32,6 +32,14 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB) {
 		public.GET("/users", publicUserHandler.ListUsers)
 	}
 
+	// User availability check routes (no authentication required)
+	userCheck := router.Group("/users")
+	{
+		userCheck.GET("/check-username/:username", userHandler.CheckUsernameAvailable)
+		userCheck.GET("/check-email/:email", userHandler.CheckEmailAvailable)
+		userCheck.POST("/check-availability", userHandler.CheckUserDataAvailability)
+	}
+
 	// Auth routes (no authentication required)
 	auth := router.Group("/auth")
 	{
@@ -49,6 +57,10 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB) {
 			users.GET("/profile", userHandler.GetProfile)
 			users.PUT("/profile", userHandler.UpdateProfile)
 			users.GET("", userHandler.ListUsers)
+			users.POST("", userHandler.CreateUser)
+			users.GET("/:id", userHandler.GetUser)
+			users.PUT("/:id", userHandler.UpdateUser)
+			users.DELETE("/:id", userHandler.DeleteUser)
 		}
 	}
 }

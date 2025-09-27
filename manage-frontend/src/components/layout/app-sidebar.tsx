@@ -16,12 +16,13 @@ import {
   LayoutDashboard,
   Database,
   Shield,
+  FileText,
 } from "lucide-react";
 
-import { NavMain } from "@/components/nav-main";
-import { NavProjects } from "@/components/nav-projects";
-import { NavUser } from "@/components/nav-user";
-import { TeamSwitcher } from "@/components/team-switcher";
+import { NavMain } from "./nav-main";
+import { NavProjects } from "./nav-projects";
+import { NavUser } from "./nav-user";
+import { TeamSwitcher } from "./team-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -29,14 +30,10 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { useAuthStore } from "@/stores/authStore";
 
 // This is sample data.
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   teams: [
     {
       name: "Acme Inc",
@@ -91,6 +88,25 @@ const data = {
         {
           title: "权限管理",
           url: "/dashboard/usersmanage/permissions",
+        },
+      ],
+    },
+    {
+      title: "文章管理",
+      url: "/dashboard/articlemanage",
+      icon: FileText,
+      items: [
+        {
+          title: "文章列表",
+          url: "/dashboard/articlemanage",
+        },
+        {
+          title: "分类管理",
+          url: "/dashboard/articlemanage/categories",
+        },
+        {
+          title: "标签管理",
+          url: "/dashboard/articlemanage/tags",
         },
       ],
     },
@@ -153,6 +169,15 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuthStore();
+
+  // 构建用户数据，如果没有登录用户则使用默认值
+  const userData = {
+    name: user?.username || "Guest",
+    email: user?.email || "guest@example.com",
+    avatar: user?.avatar || "/avatars/default.jpg",
+  };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -163,7 +188,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={userData} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

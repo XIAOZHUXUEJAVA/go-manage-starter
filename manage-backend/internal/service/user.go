@@ -17,6 +17,10 @@ type UserRepositoryInterface interface {
 	Update(user *model.User) error
 	Delete(id uint) error
 	List(offset, limit int) ([]model.User, int64, error)
+	CheckUsernameExists(username string) (bool, error)
+	CheckEmailExists(email string) (bool, error)
+	CheckUsernameExistsExcludeID(username string, excludeID uint) (bool, error)
+	CheckEmailExistsExcludeID(email string, excludeID uint) (bool, error)
 }
 
 // JWTManagerInterface defines the interface for JWT manager
@@ -148,4 +152,87 @@ func (s *UserService) Delete(id uint) error {
 func (s *UserService) List(page, pageSize int) ([]model.User, int64, error) {
 	offset := (page - 1) * pageSize
 	return s.userRepo.List(offset, pageSize)
+}
+
+// CheckUsernameAvailable 检查用户名是否可用
+func (s *UserService) CheckUsernameAvailable(username string) (bool, error) {
+	exists, err := s.userRepo.CheckUsernameExists(username)
+	if err != nil {
+		return false, err
+	}
+	return !exists, nil // 不存在则可用
+}
+
+// CheckEmailAvailable 检查邮箱是否可用
+func (s *UserService) CheckEmailAvailable(email string) (bool, error) {
+	exists, err := s.userRepo.CheckEmailExists(email)
+	if err != nil {
+		return false, err
+	}
+	return !exists, nil // 不存在则可用
+}
+
+// CheckUserDataAvailability 批量检查用户数据可用性
+func (s *UserService) CheckUserDataAvailability(req *model.CheckAvailabilityRequest) (*model.CheckAvailabilityResponse, error) {
+	response := &model.CheckAvailabilityResponse{}
+
+	// 检查用户名
+	if req.Username != "" {
+		var available bool
+		var err error
+		
+		if req.ExcludeUserID != nil && *req.ExcludeUserID > 0 {
+			exists, err := s.userRepo.CheckUsernameExistsExcludeID(req.Username, *req.ExcludeUserID)
+			if err != nil {
+				return nil, err
+			}
+			available = !exists
+		} else {
+			available, err = s.CheckUsernameAvailable(req.Username)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		message := "用户名可用"
+		if !available {
+			message = "用户名已被使用"
+		}
+
+		response.Username = &model.AvailabilityResult{
+			Available: available,
+			Message:   message,
+		}
+	}
+
+	// 检查邮箱
+	if req.Email != "" {
+		var available bool
+		var err error
+		
+		if req.ExcludeUserID != nil && *req.ExcludeUserID > 0 {
+			exists, err := s.userRepo.CheckEmailExistsExcludeID(req.Email, *req.ExcludeUserID)
+			if err != nil {
+				return nil, err
+			}
+			available = !exists
+		} else {
+			available, err = s.CheckEmailAvailable(req.Email)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		message := "邮箱可用"
+		if !available {
+			message = "邮箱已被使用"
+		}
+
+		response.Email = &model.AvailabilityResult{
+			Available: available,
+			Message:   message,
+		}
+	}
+
+	return response, nil
 }

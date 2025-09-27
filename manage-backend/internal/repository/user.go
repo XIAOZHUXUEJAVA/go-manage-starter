@@ -64,3 +64,31 @@ func (r *UserRepository) List(offset, limit int) ([]model.User, int64, error) {
 	err = r.db.Offset(offset).Limit(limit).Find(&users).Error
 	return users, total, err
 }
+
+// CheckUsernameExists 检查用户名是否存在
+func (r *UserRepository) CheckUsernameExists(username string) (bool, error) {
+	var count int64
+	err := r.db.Model(&model.User{}).Where("username = ?", username).Count(&count).Error
+	return count > 0, err
+}
+
+// CheckEmailExists 检查邮箱是否存在
+func (r *UserRepository) CheckEmailExists(email string) (bool, error) {
+	var count int64
+	err := r.db.Model(&model.User{}).Where("email = ?", email).Count(&count).Error
+	return count > 0, err
+}
+
+// CheckUsernameExistsExcludeID 检查用户名是否存在（排除指定ID）
+func (r *UserRepository) CheckUsernameExistsExcludeID(username string, excludeID uint) (bool, error) {
+	var count int64
+	err := r.db.Model(&model.User{}).Where("username = ? AND id != ?", username, excludeID).Count(&count).Error
+	return count > 0, err
+}
+
+// CheckEmailExistsExcludeID 检查邮箱是否存在（排除指定ID）
+func (r *UserRepository) CheckEmailExistsExcludeID(email string, excludeID uint) (bool, error) {
+	var count int64
+	err := r.db.Model(&model.User{}).Where("email = ? AND id != ?", email, excludeID).Count(&count).Error
+	return count > 0, err
+}

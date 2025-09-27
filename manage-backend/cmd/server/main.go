@@ -50,26 +50,8 @@ func main() {
 		log.Fatal("数据库迁移失败:", err)
 	}
 
-	// 根据环境运行种子数据
-	switch cfg.Environment {
-	case "development":
-		log.Println("🌱 正在填充开发环境数据...")
-		if err := database.SeedDatabase(db, cfg.Environment); err != nil {
-			log.Fatal("数据库种子数据填充失败:", err)
-		}
-	case "test":
-		log.Println("🧪 正在填充测试环境数据...")
-		if err := database.SeedDatabase(db, cfg.Environment); err != nil {
-			log.Fatal("数据库种子数据填充失败:", err)
-		}
-	case "production":
-		log.Println("🏭 正在检查生产环境数据...")
-		if err := database.SeedDatabase(db, cfg.Environment); err != nil {
-			log.Fatal("数据库种子数据填充失败:", err)
-		}
-	default:
-		log.Printf("⚠️  未知环境: %s, 跳过种子数据填充", cfg.Environment)
-	}
+	// 如需种子数据，可以手动调用: database.SeedDatabase(db, cfg.Environment)
+	log.Println("✅ 数据库连接成功")
 
 	// 根据环境初始化 Gin 路由器设置
 	switch cfg.Environment {

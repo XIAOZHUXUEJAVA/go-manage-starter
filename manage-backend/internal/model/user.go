@@ -41,3 +41,27 @@ type LoginResponse struct {
 	Token string `json:"token"`
 	User  User   `json:"user"`
 }
+
+// CheckAvailabilityRequest 检查可用性请求
+type CheckAvailabilityRequest struct {
+	Username      string `json:"username,omitempty"`
+	Email         string `json:"email,omitempty"`
+	ExcludeUserID *uint  `json:"exclude_user_id,omitempty"`
+}
+
+// AvailabilityResult 可用性检查结果
+type AvailabilityResult struct {
+	Available bool   `json:"available"`
+	Message   string `json:"message,omitempty"`
+}
+
+// CheckAvailabilityResponse 检查可用性响应
+type CheckAvailabilityResponse struct {
+	Username *AvailabilityResult `json:"username,omitempty"`
+	Email    *AvailabilityResult `json:"email,omitempty"`
+}
+
+// SimpleAvailabilityResponse 简单可用性响应
+type SimpleAvailabilityResponse struct {
+	Available bool `json:"available"`
+}
