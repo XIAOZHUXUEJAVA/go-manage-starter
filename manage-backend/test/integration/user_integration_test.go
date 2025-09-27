@@ -22,12 +22,23 @@ func TestUserService_Integration_RegisterAndLogin(t *testing.T) {
 
 	// Load configuration with explicit environment variables for integration tests
 	// This ensures we use the correct database credentials
-	os.Setenv("DB_USER", "xiaozhu")
-	os.Setenv("DB_PASSWORD", "12345679")
-	os.Setenv("DB_NAME", "go_manage_starter")
-	os.Setenv("DB_SCHEMA", "manage_dev")
+	os.Setenv("ENVIRONMENT", "development")
+	// os.Setenv("DB_USER", "xiaozhu")
+	// os.Setenv("DB_PASSWORD", "12345679")
+	// os.Setenv("DB_NAME", "go_manage_starter")
+	// os.Setenv("DB_SCHEMA", "manage_dev")
 	
 	cfg := config.Load()
+	
+	// 验证配置是否正确加载
+	require.NotEmpty(t, cfg.Database.Host, "数据库主机不应为空")
+	require.NotZero(t, cfg.Database.Port, "数据库端口不应为0")
+	require.NotEmpty(t, cfg.JWT.Secret, "JWT密钥不应为空")
+	require.NotZero(t, cfg.JWT.ExpireTime, "JWT过期时间不应为0")
+	
+	t.Logf("🔧 使用配置: DB=%s@%s:%s/%s, JWT过期=%d小时", 
+		cfg.Database.User, cfg.Database.Host, cfg.Database.Port, 
+		cfg.Database.Name, cfg.JWT.ExpireTime)
 	
 	// Setup test database connection
 	db, err := database.Init(cfg.Database)
@@ -136,12 +147,23 @@ func TestUserService_Integration_UserCRUD(t *testing.T) {
 	}
 
 	// Load configuration with explicit environment variables for integration tests
-	os.Setenv("DB_USER", "xiaozhu")
-	os.Setenv("DB_PASSWORD", "12345679")
-	os.Setenv("DB_NAME", "go_manage_starter")
-	os.Setenv("DB_SCHEMA", "manage_dev")
+	os.Setenv("ENVIRONMENT", "development")
+	// os.Setenv("DB_USER", "xiaozhu")
+	// os.Setenv("DB_PASSWORD", "12345679")
+	// os.Setenv("DB_NAME", "go_manage_starter")
+	// os.Setenv("DB_SCHEMA", "manage_dev")
 	
 	cfg := config.Load()
+	
+	// 验证配置是否正确加载
+	require.NotEmpty(t, cfg.Database.Host, "数据库主机不应为空")
+	require.NotZero(t, cfg.Database.Port, "数据库端口不应为0")
+	require.NotEmpty(t, cfg.JWT.Secret, "JWT密钥不应为空")
+	require.NotZero(t, cfg.JWT.ExpireTime, "JWT过期时间不应为0")
+	
+	t.Logf("🔧 使用配置: DB=%s@%s:%s/%s, JWT过期=%d小时", 
+		cfg.Database.User, cfg.Database.Host, cfg.Database.Port, 
+		cfg.Database.Name, cfg.JWT.ExpireTime)
 	
 	// Setup test database connection
 	db, err := database.Init(cfg.Database)

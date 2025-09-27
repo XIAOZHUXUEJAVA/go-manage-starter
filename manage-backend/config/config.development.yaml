@@ -19,4 +19,3 @@ redis:
 jwt:
   secret: dev-jwt-secret-key-change-this-in-production
   expire_time: 24
-  expire_time: 2h
