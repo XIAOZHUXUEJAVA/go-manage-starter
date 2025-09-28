@@ -64,36 +64,92 @@ func (h *UserHandler) Register(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param credentials body model.LoginRequest true "Login credentials"
-// @Success 200 {object} model.LoginResponse
-// @Failure 400 {object} map[string]interface{}
-// @Failure 401 {object} map[string]interface{}
+// @Success 200 {object} utils.APIResponse{data=model.LoginResponse} "登录成功"
+// @Failure 400 {object} utils.APIResponse "请求参数错误"
+// @Failure 401 {object} utils.APIResponse "认证失败"
+// @Failure 500 {object} utils.APIResponse "服务器内部错误"
 // @Router /auth/login [post]
 func (h *UserHandler) Login(c *gin.Context) {
 	var req model.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    http.StatusBadRequest,
-			"message": "bad request",
-			"error":   err.Error(),
-		})
+		utils.BadRequest(c, "Invalid request format")
 		return
 	}
 
-	response, err := h.userService.Login(&req)
+	// Extract client information
+	deviceInfo := c.GetHeader("X-Device-Info")
+	if deviceInfo == "" {
+		deviceInfo = "Unknown Device"
+	}
+	
+	ipAddress := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	response, err := h.userService.LoginWithContext(c.Request.Context(), &req, deviceInfo, ipAddress, userAgent)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"code":    http.StatusUnauthorized,
-			"message": "unauthorized",
-			"error":   err.Error(),
-		})
+		utils.Unauthorized(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    http.StatusOK,
-		"message": "success",
-		"data":    response,
-	})
+	utils.Success(c, response)
+}
+
+// RefreshToken godoc
+// @Summary Refresh access token
+// @Description Refresh access token using refresh token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param refresh body model.RefreshTokenRequest true "Refresh token request"
+// @Success 200 {object} utils.APIResponse{data=model.RefreshTokenResponse} "刷新成功"
+// @Failure 400 {object} utils.APIResponse "请求参数错误"
+// @Failure 401 {object} utils.APIResponse "刷新token无效"
+// @Failure 500 {object} utils.APIResponse "服务器内部错误"
+// @Router /auth/refresh [post]
+func (h *UserHandler) RefreshToken(c *gin.Context) {
+	var req model.RefreshTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BadRequest(c, "Invalid request format")
+		return
+	}
+
+	response, err := h.userService.RefreshToken(c.Request.Context(), &req)
+	if err != nil {
+		utils.Unauthorized(c, err.Error())
+		return
+	}
+
+	utils.Success(c, response)
+}
+
+// Logout godoc
+// @Summary User logout
+// @Description Logout user and invalidate tokens
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param logout body model.LogoutRequest false "Logout request (refresh token optional)"
+// @Success 200 {object} utils.APIResponse "登出成功"
+// @Failure 400 {object} utils.APIResponse "请求参数错误"
+// @Failure 401 {object} utils.APIResponse "未授权"
+// @Failure 500 {object} utils.APIResponse "服务器内部错误"
+// @Router /auth/logout [post]
+func (h *UserHandler) Logout(c *gin.Context) {
+	userID := c.GetUint("user_id")
+	accessToken := c.GetString("access_token")
+
+	var req model.LogoutRequest
+	// Logout request body is optional
+	c.ShouldBindJSON(&req)
+
+	err := h.userService.Logout(c.Request.Context(), userID, accessToken, &req)
+	if err != nil {
+		utils.InternalServerError(c, "Failed to logout")
+		return
+	}
+
+	utils.Success(c, gin.H{"message": "Logged out successfully"})
 }
 
 // GetProfile godoc

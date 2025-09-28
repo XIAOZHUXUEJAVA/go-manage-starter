@@ -1,10 +1,13 @@
 package service
 
 import (
+	"context"
 	"errors"
+	"time"
 
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/model"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/utils"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/auth"
 	"gorm.io/gorm"
 )
 
@@ -26,17 +29,36 @@ type UserRepositoryInterface interface {
 // JWTManagerInterface defines the interface for JWT manager
 type JWTManagerInterface interface {
 	GenerateToken(userID uint, username, role string) (string, error)
+	GenerateTokenPair(userID uint, username, role string) (*auth.TokenPair, error)
+	ValidateToken(tokenString string) (*auth.Claims, error)
+	ValidateRefreshToken(tokenString string) (*auth.Claims, error)
+	GetTokenExpiration(claims *auth.Claims) time.Duration
+}
+
+// SessionServiceInterface defines the interface for session service
+type SessionServiceInterface interface {
+	CreateSession(ctx context.Context, userID uint, username, refreshToken, deviceInfo, ipAddress, userAgent string) error
+	GetSession(ctx context.Context, userID uint) (*SessionInfo, error)
+	UpdateLastActivity(ctx context.Context, userID uint) error
+	DeleteSession(ctx context.Context, userID uint) error
+	ValidateRefreshToken(ctx context.Context, refreshToken string) (*SessionInfo, error)
+	AddTokenToBlacklist(ctx context.Context, jti string, expiration time.Duration) error
+	IsTokenBlacklisted(ctx context.Context, jti string) bool
+	SetUserActive(ctx context.Context, userID uint) error
+	CacheUserPermissions(ctx context.Context, userID uint, role string, permissions []string) error
 }
 
 type UserService struct {
-	userRepo   UserRepositoryInterface
-	jwtManager JWTManagerInterface
+	userRepo       UserRepositoryInterface
+	jwtManager     JWTManagerInterface
+	sessionService SessionServiceInterface
 }
 
-func NewUserService(userRepo UserRepositoryInterface, jwtManager JWTManagerInterface) *UserService {
+func NewUserService(userRepo UserRepositoryInterface, jwtManager JWTManagerInterface, sessionService SessionServiceInterface) *UserService {
 	return &UserService{
-		userRepo:   userRepo,
-		jwtManager: jwtManager,
+		userRepo:       userRepo,
+		jwtManager:     jwtManager,
+		sessionService: sessionService,
 	}
 }
 
@@ -79,6 +101,11 @@ func (s *UserService) Register(req *model.CreateUserRequest) (*model.User, error
 }
 
 func (s *UserService) Login(req *model.LoginRequest) (*model.LoginResponse, error) {
+	return s.LoginWithContext(context.Background(), req, "", "", "")
+}
+
+// LoginWithContext performs login with session context information
+func (s *UserService) LoginWithContext(ctx context.Context, req *model.LoginRequest, deviceInfo, ipAddress, userAgent string) (*model.LoginResponse, error) {
 	user, err := s.userRepo.GetByUsername(req.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -91,9 +118,25 @@ func (s *UserService) Login(req *model.LoginRequest) (*model.LoginResponse, erro
 		return nil, errors.New("invalid credentials")
 	}
 
-	token, err := s.jwtManager.GenerateToken(user.ID, user.Username, user.Role)
+	// Generate token pair
+	tokenPair, err := s.jwtManager.GenerateTokenPair(user.ID, user.Username, user.Role)
 	if err != nil {
 		return nil, err
+	}
+
+	// Create session in Redis
+	if s.sessionService != nil {
+		err = s.sessionService.CreateSession(ctx, user.ID, user.Username, tokenPair.RefreshToken, deviceInfo, ipAddress, userAgent)
+		if err != nil {
+			return nil, err
+		}
+
+		// Set user as active
+		s.sessionService.SetUserActive(ctx, user.ID)
+
+		// Cache user permissions
+		permissions := []string{} // You can extend this based on your permission system
+		s.sessionService.CacheUserPermissions(ctx, user.ID, user.Role, permissions)
 	}
 
 	// Create a safe user response without password
@@ -109,9 +152,83 @@ func (s *UserService) Login(req *model.LoginRequest) (*model.LoginResponse, erro
 	}
 
 	return &model.LoginResponse{
-		Token: token,
-		User:  safeUser,
+		AccessToken:      tokenPair.AccessToken,
+		RefreshToken:     tokenPair.RefreshToken,
+		ExpiresIn:        tokenPair.ExpiresIn,
+		RefreshExpiresIn: tokenPair.RefreshExpiresIn,
+		TokenType:        "Bearer",
+		User:             safeUser,
 	}, nil
+}
+
+// RefreshToken refreshes the access token using refresh token
+func (s *UserService) RefreshToken(ctx context.Context, req *model.RefreshTokenRequest) (*model.RefreshTokenResponse, error) {
+	if s.sessionService == nil {
+		return nil, errors.New("session service not available")
+	}
+
+	// Validate refresh token and get session
+	sessionInfo, err := s.sessionService.ValidateRefreshToken(ctx, req.RefreshToken)
+	if err != nil {
+		return nil, errors.New("invalid refresh token")
+	}
+
+	// Generate new access token
+	tokenPair, err := s.jwtManager.GenerateTokenPair(sessionInfo.UserID, sessionInfo.Username, "user") // You might want to get role from session
+	if err != nil {
+		return nil, err
+	}
+
+	// Update session with new refresh token
+	err = s.sessionService.CreateSession(ctx, sessionInfo.UserID, sessionInfo.Username, tokenPair.RefreshToken, sessionInfo.DeviceInfo, sessionInfo.IPAddress, sessionInfo.UserAgent)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update last activity
+	s.sessionService.UpdateLastActivity(ctx, sessionInfo.UserID)
+
+	return &model.RefreshTokenResponse{
+		AccessToken: tokenPair.AccessToken,
+		ExpiresIn:   tokenPair.ExpiresIn,
+		TokenType:   "Bearer",
+	}, nil
+}
+
+// Logout performs user logout
+func (s *UserService) Logout(ctx context.Context, userID uint, accessToken string, req *model.LogoutRequest) error {
+	if s.sessionService == nil {
+		return errors.New("session service not available")
+	}
+
+	// Validate and get access token claims
+	claims, err := s.jwtManager.ValidateToken(accessToken)
+	if err != nil {
+		return errors.New("invalid access token")
+	}
+
+	// Add access token to blacklist
+	expiration := s.jwtManager.GetTokenExpiration(claims)
+	if expiration > 0 {
+		err = s.sessionService.AddTokenToBlacklist(ctx, claims.JTI, expiration)
+		if err != nil {
+			return err
+		}
+	}
+
+	// If refresh token is provided, validate and blacklist it too
+	if req.RefreshToken != "" {
+		refreshClaims, err := s.jwtManager.ValidateRefreshToken(req.RefreshToken)
+		if err == nil {
+			refreshExpiration := s.jwtManager.GetTokenExpiration(refreshClaims)
+			if refreshExpiration > 0 {
+				s.sessionService.AddTokenToBlacklist(ctx, refreshClaims.JTI, refreshExpiration)
+			}
+		}
+	}
+
+	// Delete session
+	return s.sessionService.DeleteSession(ctx, userID)
 }
 
 func (s *UserService) GetByID(id uint) (*model.User, error) {

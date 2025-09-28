@@ -7,18 +7,36 @@ import (
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/repository"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/service"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/auth"
+	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/cache"
 	"gorm.io/gorm"
 )
 
 func SetupRoutes(router *gin.RouterGroup, db *gorm.DB) {
 	cfg := config.Load()
-	jwtManager := auth.NewJWTManager(cfg.JWT.Secret, cfg.JWT.ExpireTime)
+	
+	// Initialize JWT manager with configuration
+	accessTokenExpire := cfg.JWT.AccessTokenExpire
+	refreshTokenExpire := cfg.JWT.RefreshTokenExpire
+	
+	// Fallback to default values if not configured
+	if accessTokenExpire == 0 {
+		accessTokenExpire = 30 // 30 minutes
+	}
+	if refreshTokenExpire == 0 {
+		refreshTokenExpire = 720 // 30 days in hours
+	}
+	
+	jwtManager := auth.NewJWTManager(cfg.JWT.Secret, accessTokenExpire, refreshTokenExpire)
+
+	// Initialize Redis client
+	redisClient := cache.NewRedisClient(cfg.Redis)
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
 
 	// Initialize services
-	userService := service.NewUserService(userRepo, jwtManager)
+	sessionService := service.NewSessionService(redisClient, jwtManager)
+	userService := service.NewUserService(userRepo, jwtManager, sessionService)
 
 	// Initialize handlers
 	userHandler := NewUserHandler(userService)
@@ -41,16 +59,23 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB) {
 	}
 
 	// Auth routes (no authentication required)
-	auth := router.Group("/auth")
+	authRoutes := router.Group("/auth")
 	{
-		auth.POST("/register", userHandler.Register)
-		auth.POST("/login", userHandler.Login)
+		authRoutes.POST("/register", userHandler.Register)
+		authRoutes.POST("/login", userHandler.Login)
+		authRoutes.POST("/refresh", userHandler.RefreshToken)
 	}
 
 	// Protected routes (authentication required)
 	protected := router.Group("/")
-	protected.Use(middleware.JWTAuth(jwtManager))
+	protected.Use(middleware.JWTAuthWithSession(jwtManager, sessionService))
 	{
+		// Auth routes that require authentication
+		authProtected := protected.Group("/auth")
+		{
+			authProtected.POST("/logout", userHandler.Logout)
+		}
+
 		// User routes
 		users := protected.Group("/users")
 		{

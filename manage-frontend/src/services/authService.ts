@@ -4,6 +4,9 @@ import {
   LoginResponse,
   RegisterRequest,
   AuthUser,
+  RefreshTokenRequest,
+  RefreshTokenResponse,
+  LogoutRequest,
 } from "@/types/auth";
 import { APIResponse } from "@/types/api";
 
@@ -40,17 +43,25 @@ export class AuthService {
   }
 
   /**
-   * 刷新token
-   * @returns 新的token
+   * 刷新access token
+   * @param refreshToken 刷新token
+   * @returns 新的access token
    */
-  static async refreshToken(): Promise<APIResponse<{ token: string }>> {
-    return ApiService.post<{ token: string }>("/auth/refresh");
+  static async refreshToken(
+    refreshToken: string
+  ): Promise<APIResponse<RefreshTokenResponse>> {
+    const request: RefreshTokenRequest = { refresh_token: refreshToken };
+    return ApiService.post<RefreshTokenResponse>("/auth/refresh", request);
   }
 
   /**
    * 用户登出
+   * @param refreshToken 可选的刷新token
    */
-  static async logout(): Promise<APIResponse<null>> {
-    return ApiService.post<null>("/auth/logout");
+  static async logout(refreshToken?: string): Promise<APIResponse<null>> {
+    const request: LogoutRequest = refreshToken
+      ? { refresh_token: refreshToken }
+      : {};
+    return ApiService.post<null>("/auth/logout", request);
   }
 }

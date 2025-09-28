@@ -1,4 +1,4 @@
-port: 8080
+port: 9000
 log_level: info
 
 database:
@@ -17,4 +17,6 @@ redis:
 
 jwt:
   secret: default-jwt-secret-key
-  expire_time: 24
+  expire_time: 24 # Deprecated: for backward compatibility
+  access_token_expire: 30 # Access token expiration in minutes
+  refresh_token_expire: 720 # Refresh token expiration in hours (30 days)

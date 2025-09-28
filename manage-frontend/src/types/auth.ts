@@ -6,8 +6,29 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
+  access_token: string;
+  refresh_token: string;
+  expires_in: number; // Access token expiration in seconds
+  refresh_expires_in: number; // Refresh token expiration in seconds
+  token_type: string; // Always "Bearer"
   user: AuthUser;
+}
+
+// 刷新token请求
+export interface RefreshTokenRequest {
+  refresh_token: string;
+}
+
+// 刷新token响应
+export interface RefreshTokenResponse {
+  access_token: string;
+  expires_in: number;
+  token_type: string;
+}
+
+// 登出请求
+export interface LogoutRequest {
+  refresh_token?: string;
 }
 
 export interface AuthUser {
@@ -30,7 +51,9 @@ export interface RegisterRequest {
 
 export interface AuthState {
   user: AuthUser | null;
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  tokenExpiresAt: number | null; // Access token expiration timestamp
   isAuthenticated: boolean;
   isLoading: boolean;
 }

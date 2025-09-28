@@ -33,8 +33,10 @@ type Redis struct {
 }
 
 type JWT struct {
-	Secret     string `mapstructure:"secret"`
-	ExpireTime int    `mapstructure:"expire_time"`
+	Secret               string `mapstructure:"secret"`
+	ExpireTime           int    `mapstructure:"expire_time"`           // Deprecated: use AccessTokenExpire
+	AccessTokenExpire    int    `mapstructure:"access_token_expire"`   // Access token expiration in minutes
+	RefreshTokenExpire   int    `mapstructure:"refresh_token_expire"`  // Refresh token expiration in hours
 }
 
 func Load() *Config {
@@ -91,6 +93,8 @@ func Load() *Config {
 	viper.BindEnv("redis.db", "REDIS_DB")
 	viper.BindEnv("jwt.secret", "JWT_SECRET")
 	viper.BindEnv("jwt.expire_time", "JWT_EXPIRE_TIME")
+	viper.BindEnv("jwt.access_token_expire", "JWT_ACCESS_TOKEN_EXPIRE")
+	viper.BindEnv("jwt.refresh_token_expire", "JWT_REFRESH_TOKEN_EXPIRE")
 
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {

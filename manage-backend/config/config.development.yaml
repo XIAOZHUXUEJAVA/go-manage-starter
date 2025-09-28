@@ -18,4 +18,6 @@ redis:
 
 jwt:
   secret: dev-jwt-secret-key-change-this-in-production
-  expire_time: 24
+  expire_time: 24 # Deprecated: for backward compatibility
+  access_token_expire: 30 # Access token expiration in minutes
+  refresh_token_expire: 720 # Refresh token expiration in hours (30 days)

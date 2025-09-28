@@ -38,8 +38,29 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Token string `json:"token"`
-	User  User   `json:"user"`
+	AccessToken      string `json:"access_token"`
+	RefreshToken     string `json:"refresh_token"`
+	ExpiresIn        int64  `json:"expires_in"`        // Access token expiration in seconds
+	RefreshExpiresIn int64  `json:"refresh_expires_in"` // Refresh token expiration in seconds
+	TokenType        string `json:"token_type"`         // Always "Bearer"
+	User             User   `json:"user"`
+}
+
+// RefreshTokenRequest 刷新token请求
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+// RefreshTokenResponse 刷新token响应
+type RefreshTokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	ExpiresIn    int64  `json:"expires_in"`
+	TokenType    string `json:"token_type"`
+}
+
+// LogoutRequest 登出请求
+type LogoutRequest struct {
+	RefreshToken string `json:"refresh_token,omitempty"`
 }
 
 // CheckAvailabilityRequest 检查可用性请求

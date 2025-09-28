@@ -3,6 +3,15 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { AuthStore, LoginRequest, RegisterRequest } from "@/types/auth";
 import { AuthService } from "@/services/authService";
 import { toast } from "sonner";
+import {
+  getAccessToken,
+  getRefreshToken,
+  getTokenExpiresAt,
+  setTokens,
+  removeTokens,
+  isAccessTokenValid,
+  isTokenExpiringSoon,
+} from "@/lib/tokenUtils";
 
 /**
  * 认证状态管理 Store
@@ -13,7 +22,9 @@ export const useAuthStore = create<AuthStore>()(
     (set, get) => ({
       // 初始状态
       user: null,
-      token: null,
+      accessToken: null,
+      refreshToken: null,
+      tokenExpiresAt: null,
       isAuthenticated: false,
       isLoading: false,
 
@@ -32,27 +43,31 @@ export const useAuthStore = create<AuthStore>()(
           console.log("🔐 Login - API响应:", response);
 
           if (response.data) {
-            const { token, user } = response.data;
+            const { access_token, refresh_token, expires_in, user } =
+              response.data;
             console.log(
               "🔐 Login - 登录成功，用户:",
               user.username,
-              "Token:",
-              token ? "已获取" : "未获取"
+              "Access Token:",
+              access_token ? "已获取" : "未获取"
             );
+
+            // 计算token过期时间
+            const tokenExpiresAt = Date.now() + expires_in * 1000;
 
             // 设置认证状态
             set({
               user,
-              token,
+              accessToken: access_token,
+              refreshToken: refresh_token,
+              tokenExpiresAt,
               isAuthenticated: true,
               isLoading: false,
             });
 
-            // 设置 axios 默认 Authorization header
-            if (typeof window !== "undefined") {
-              localStorage.setItem("auth-token", token);
-              console.log("🔐 Login - Token已保存到localStorage");
-            }
+            // 保存tokens到localStorage
+            setTokens(access_token, refresh_token, expires_in);
+            console.log("🔐 Login - Tokens已保存到localStorage");
 
             toast.success("登录成功！正在跳转...");
             // 保持 loading 状态，直到 AuthGuard 完成重定向
@@ -115,22 +130,75 @@ export const useAuthStore = create<AuthStore>()(
       // 检查认证状态
       checkAuth: async () => {
         try {
-          const token = get().token;
-          console.log("🔍 CheckAuth - Token:", token ? "存在" : "不存在");
+          // 从localStorage获取最新的token信息
+          const accessToken = getAccessToken();
+          const refreshToken = getRefreshToken();
+          const tokenExpiresAt = getTokenExpiresAt();
 
-          // 如果没有 token，直接设置为未认证状态
-          if (!token) {
-            console.log("❌ CheckAuth - 没有token，设置为未认证状态");
+          console.log(
+            "🔍 CheckAuth - Access Token:",
+            accessToken ? "存在" : "不存在"
+          );
+
+          // 如果没有 access token，直接设置为未认证状态
+          if (!accessToken) {
+            console.log("❌ CheckAuth - 没有access token，设置为未认证状态");
             set({
               user: null,
-              token: null,
+              accessToken: null,
+              refreshToken: null,
+              tokenExpiresAt: null,
               isAuthenticated: false,
               isLoading: false,
             });
             return;
           }
 
-          console.log("🔄 CheckAuth - 开始验证token...");
+          // 检查token是否即将过期（提前5分钟刷新）
+          if (isTokenExpiringSoon() && refreshToken) {
+            console.log("🔄 CheckAuth - Token即将过期，尝试刷新...");
+            try {
+              const refreshResponse = await AuthService.refreshToken(
+                refreshToken
+              );
+              if (refreshResponse.data) {
+                const { access_token, expires_in } = refreshResponse.data;
+                const newTokenExpiresAt = Date.now() + expires_in * 1000;
+
+                // 更新store状态
+                set({
+                  accessToken: access_token,
+                  tokenExpiresAt: newTokenExpiresAt,
+                });
+
+                // 更新localStorage
+                setTokens(access_token, refreshToken, expires_in);
+                console.log("✅ CheckAuth - Token刷新成功");
+              }
+            } catch (refreshError) {
+              console.error("❌ CheckAuth - Token刷新失败:", refreshError);
+              // 刷新失败，清除认证状态
+              removeTokens();
+              set({
+                user: null,
+                accessToken: null,
+                refreshToken: null,
+                tokenExpiresAt: null,
+                isAuthenticated: false,
+                isLoading: false,
+              });
+              return;
+            }
+          }
+
+          // 同步store状态与localStorage
+          set({
+            accessToken,
+            refreshToken,
+            tokenExpiresAt,
+          });
+
+          console.log("🔄 CheckAuth - 开始验证用户信息...");
           set({ isLoading: true });
 
           const response = await AuthService.getCurrentUser();
@@ -150,7 +218,9 @@ export const useAuthStore = create<AuthStore>()(
             console.log("❌ CheckAuth - 响应中没有用户数据");
             set({
               user: null,
-              token: null,
+              accessToken: null,
+              refreshToken: null,
+              tokenExpiresAt: null,
               isAuthenticated: false,
               isLoading: false,
             });
@@ -160,22 +230,24 @@ export const useAuthStore = create<AuthStore>()(
           // Token 无效，清除认证状态
           set({
             user: null,
-            token: null,
+            accessToken: null,
+            refreshToken: null,
+            tokenExpiresAt: null,
             isAuthenticated: false,
             isLoading: false,
           });
 
-          if (typeof window !== "undefined") {
-            localStorage.removeItem("auth-token");
-          }
+          removeTokens();
         }
       },
 
       // 用户登出
       logout: () => {
+        const { refreshToken } = get();
+
         try {
-          // 调用后端登出接口（可选）
-          AuthService.logout().catch(() => {
+          // 调用后端登出接口
+          AuthService.logout(refreshToken ?? undefined).catch(() => {
             // 忽略登出接口错误，继续清除本地状态
           });
         } catch (error) {
@@ -184,14 +256,16 @@ export const useAuthStore = create<AuthStore>()(
           // 清除本地状态
           set({
             user: null,
-            token: null,
+            accessToken: null,
+            refreshToken: null,
+            tokenExpiresAt: null,
             isAuthenticated: false,
             isLoading: false,
           });
 
           // 清除本地存储并立即跳转
+          removeTokens();
           if (typeof window !== "undefined") {
-            localStorage.removeItem("auth-token");
             window.location.href = "/login";
           }
 
@@ -205,7 +279,9 @@ export const useAuthStore = create<AuthStore>()(
       // 只持久化必要的字段
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        tokenExpiresAt: state.tokenExpiresAt,
         isAuthenticated: state.isAuthenticated,
       }),
     }
