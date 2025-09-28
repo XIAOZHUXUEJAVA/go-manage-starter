@@ -5,8 +5,6 @@ import { User } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -15,14 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,25 +31,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import {
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
-  Mail,
-  Calendar,
-  User as UserIcon,
-  Shield,
-} from "lucide-react";
+import { MoreHorizontal, Eye, Edit, Trash2, Mail } from "lucide-react";
+import { UserDetailModal } from "./UserDetailModal";
+import { EditUserModal } from "./EditUserModal";
+import { formatDateTable } from "@/lib/date";
 
 interface UserManagementTableProps {
   users: User[];
@@ -83,18 +58,6 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-
-  // 格式化日期
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   // 获取状态颜色
   const getStatusColor = (status: string) => {
@@ -102,7 +65,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
       case "active":
         return "bg-green-100 text-green-800 hover:bg-green-200";
       case "inactive":
-        return "bg-red-100 text-red-800 hover:bg-red-200";
+        return "bg-gray-100 text-gray-800 hover:bg-gray-200";
       case "pending":
         return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
       default:
@@ -114,13 +77,13 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
   const getRoleColor = (role: string) => {
     switch (role.toLowerCase()) {
       case "admin":
-        return "bg-purple-100 text-purple-800";
-      case "user":
-        return "bg-blue-100 text-blue-800";
+        return "bg-red-100 text-red-800 hover:bg-red-200";
       case "moderator":
-        return "bg-orange-100 text-orange-800";
+        return "bg-blue-100 text-blue-800 hover:bg-blue-200";
+      case "user":
+        return "bg-green-100 text-green-800 hover:bg-green-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 hover:bg-gray-200";
     }
   };
 
@@ -133,7 +96,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
 
   // 处理编辑用户
   const handleEditUser = (user: User) => {
-    setEditingUser({ ...user });
+    setSelectedUser(user);
     setIsEditModalOpen(true);
   };
 
@@ -143,24 +106,22 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
     setIsDeleteDialogOpen(true);
   };
 
+  // 保存编辑
+  const handleSaveEdit = (updatedUser: User) => {
+    onEdit?.(updatedUser);
+    setSelectedUser(null);
+  };
+
   // 确认删除用户
   const confirmDeleteUser = () => {
     if (selectedUser) {
       onDelete?.(selectedUser);
-      setIsDeleteDialogOpen(false);
       setSelectedUser(null);
+      setIsDeleteDialogOpen(false);
     }
   };
 
-  // 保存编辑的用户
-  const handleSaveEdit = () => {
-    if (editingUser) {
-      onEdit?.(editingUser);
-      setIsEditModalOpen(false);
-      setEditingUser(null);
-    }
-  };
-
+  // 加载状态
   if (loading) {
     return (
       <div className="rounded-md border">
@@ -180,7 +141,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
               <TableRow key={index}>
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+                    <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse" />
                     <div className="space-y-2">
                       <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
                       <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
@@ -257,7 +218,9 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <div className="text-sm">{formatDate(user.created_at)}</div>
+                  <div className="text-sm">
+                    {formatDateTable(user.created_at)}
+                  </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
@@ -294,172 +257,19 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
         </Table>
       </div>
 
-      {/* 用户详情模态框 */}
-      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>用户详情</DialogTitle>
-            <DialogDescription>查看用户的详细信息</DialogDescription>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="grid gap-4">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarFallback className="text-lg">
-                    {selectedUser.username.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="text-lg font-semibold">
-                    {selectedUser.username}
-                  </h3>
-                  <p className="text-muted-foreground">{selectedUser.email}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge className={getRoleColor(selectedUser.role)}>
-                      <Shield className="mr-1 h-3 w-3" />
-                      {selectedUser.role}
-                    </Badge>
-                    <Badge className={getStatusColor(selectedUser.status)}>
-                      {selectedUser.status}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-              <div className="grid gap-4 pt-4 border-t">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <UserIcon className="h-4 w-4" />
-                      用户ID
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedUser.id}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      邮箱地址
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedUser.email}
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      创建时间
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(selectedUser.created_at)}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      更新时间
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(selectedUser.updated_at)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* 使用新的独立组件 */}
+      <UserDetailModal
+        user={selectedUser}
+        open={isDetailModalOpen}
+        onOpenChange={setIsDetailModalOpen}
+      />
 
-      {/* 编辑用户模态框 */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>编辑用户</DialogTitle>
-            <DialogDescription>修改用户的基本信息</DialogDescription>
-          </DialogHeader>
-          {editingUser && (
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-username">用户名</Label>
-                <Input
-                  id="edit-username"
-                  value={editingUser.username}
-                  onChange={(e) =>
-                    setEditingUser({
-                      ...editingUser,
-                      username: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-email">邮箱</Label>
-                <Input
-                  id="edit-email"
-                  type="email"
-                  value={editingUser.email}
-                  onChange={(e) =>
-                    setEditingUser({
-                      ...editingUser,
-                      email: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-role">角色</Label>
-                <Select
-                  value={editingUser.role}
-                  onValueChange={(value) =>
-                    setEditingUser({
-                      ...editingUser,
-                      role: value,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择角色" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">管理员</SelectItem>
-                    <SelectItem value="user">普通用户</SelectItem>
-                    <SelectItem value="moderator">版主</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-status">状态</Label>
-                <Select
-                  value={editingUser.status}
-                  onValueChange={(value) =>
-                    setEditingUser({
-                      ...editingUser,
-                      status: value,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择状态" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">活跃</SelectItem>
-                    <SelectItem value="inactive">非活跃</SelectItem>
-                    <SelectItem value="pending">待审核</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
-              取消
-            </Button>
-            <Button onClick={handleSaveEdit}>保存更改</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditUserModal
+        user={selectedUser}
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        onSave={handleSaveEdit}
+      />
 
       {/* 删除确认对话框 */}
       <AlertDialog

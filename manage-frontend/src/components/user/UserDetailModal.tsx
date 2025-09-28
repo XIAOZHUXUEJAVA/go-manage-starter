@@ -1,179 +1,129 @@
-import React, { useEffect } from "react";
-import { useUser } from "@/hooks/useUsers";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw } from "lucide-react";
+"use client";
+
+import React from "react";
+import { User } from "@/types/api";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Calendar, Mail, Shield, User as UserIcon } from "lucide-react";
+import { formatDateDetail } from "@/lib/date";
 
 interface UserDetailModalProps {
-  userId: number | null;
-  isOpen: boolean;
-  onClose: () => void;
+  user: User | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-/**
- * 用户详情模态框组件
- */
-export const UserDetailModal: React.FC<UserDetailModalProps> = ({
-  userId,
-  isOpen,
-  onClose,
-}) => {
-  const { user, loading, error, fetchUser } = useUser();
-
-  useEffect(() => {
-    if (isOpen && userId) {
-      fetchUser(userId);
+export function UserDetailModal({
+  user,
+  open,
+  onOpenChange,
+}: UserDetailModalProps) {
+  // 获取状态颜色
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "active":
+        return "bg-green-100 text-green-800 hover:bg-green-200";
+      case "inactive":
+        return "bg-gray-100 text-gray-800 hover:bg-gray-200";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
+      default:
+        return "bg-gray-100 text-gray-800 hover:bg-gray-200";
     }
-  }, [isOpen, userId, fetchUser]);
-
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
   };
 
-  if (!isOpen) return null;
+  // 获取角色颜色
+  const getRoleColor = (role: string) => {
+    switch (role.toLowerCase()) {
+      case "admin":
+        return "bg-red-100 text-red-800 hover:bg-red-200";
+      case "moderator":
+        return "bg-blue-100 text-blue-800 hover:bg-blue-200";
+      case "user":
+        return "bg-green-100 text-green-800 hover:bg-green-200";
+      default:
+        return "bg-gray-100 text-gray-800 hover:bg-gray-200";
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* 背景遮罩 */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* 模态框内容 */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full">
-          {/* 头部 */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">用户详情</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* 内容 */}
-          <div className="p-6">
-            {loading && (
-              <div className="py-8">
-                <LoadingSpinner size="lg" />
-                <p className="text-center text-gray-500 mt-4">加载中...</p>
-              </div>
-            )}
-
-            {error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="flex items-center justify-between">
-                  <span>{error}</span>
-                  <button
-                    onClick={() => userId && fetchUser(userId)}
-                    className="ml-2 inline-flex items-center gap-1 text-sm underline hover:no-underline"
-                  >
-                    <RefreshCw className="h-3 w-3" />
-                    重试
-                  </button>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {user && !loading && !error && (
-              <div className="space-y-4">
-                {/* 用户头像 */}
-                <div className="flex justify-center">
-                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-semibold text-2xl">
-                      {user.username.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-
-                {/* 用户信息 */}
-                <div className="space-y-3">
-                  <div className="text-center">
-                    <h3 className="text-xl font-semibold text-gray-900">
-                      {user.username}
-                    </h3>
-                    <p className="text-gray-600">{user.email}</p>
-                  </div>
-
-                  <div className="border-t border-gray-200 pt-4">
-                    <dl className="space-y-3">
-                      <div className="flex justify-between">
-                        <dt className="text-sm font-medium text-gray-500">
-                          用户ID:
-                        </dt>
-                        <dd className="text-sm text-gray-900">{user.id}</dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="text-sm font-medium text-gray-500">
-                          用户名:
-                        </dt>
-                        <dd className="text-sm text-gray-900">
-                          {user.username}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="text-sm font-medium text-gray-500">
-                          邮箱:
-                        </dt>
-                        <dd className="text-sm text-gray-900">{user.email}</dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="text-sm font-medium text-gray-500">
-                          创建时间:
-                        </dt>
-                        <dd className="text-sm text-gray-900">
-                          {formatDate(user.created_at)}
-                        </dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt className="text-sm font-medium text-gray-500">
-                          更新时间:
-                        </dt>
-                        <dd className="text-sm text-gray-900">
-                          {formatDate(user.updated_at)}
-                        </dd>
-                      </div>
-                    </dl>
-                  </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>用户详情</DialogTitle>
+          <DialogDescription>查看用户的详细信息</DialogDescription>
+        </DialogHeader>
+        {user && (
+          <div className="grid gap-4">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16">
+                <AvatarFallback className="text-lg">
+                  {user.username.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="text-lg font-semibold">{user.username}</h3>
+                <p className="text-muted-foreground">{user.email}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge className={getRoleColor(user.role)}>
+                    <Shield className="mr-1 h-3 w-3" />
+                    {user.role}
+                  </Badge>
+                  <Badge className={getStatusColor(user.status)}>
+                    {user.status}
+                  </Badge>
                 </div>
               </div>
-            )}
+            </div>
+            <div className="grid gap-4 pt-4 border-t">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <UserIcon className="h-4 w-4" />
+                    用户ID
+                  </Label>
+                  <p className="text-sm text-muted-foreground">{user.id}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    邮箱地址
+                  </Label>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    创建时间
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {formatDateDetail(user.created_at)}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    更新时间
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {formatDateDetail(user.updated_at)}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-
-          {/* 底部 */}
-          <div className="flex justify-end p-6 border-t border-gray-200">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
-            >
-              关闭
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
-};
+}

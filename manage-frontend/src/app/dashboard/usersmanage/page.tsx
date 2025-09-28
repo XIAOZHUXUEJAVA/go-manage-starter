@@ -12,59 +12,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Users, Plus, RefreshCw } from "lucide-react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Users,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
-  Plus,
-  RefreshCw,
-  UserCheck,
-  UserX,
-  Calendar,
-  Mail,
-} from "lucide-react";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { UserManagementTable } from "@/components/user/UserManagementTable";
-import { AddUserModal } from "@/components/user/AddUserModal";
+  UserManagementTable,
+  AddUserModal,
+  UserStatsCards,
+  UserSearchFilter,
+} from "@/components/user";
 import { userApi } from "@/api";
 import { CreateUserRequest, UpdateUserRequest } from "@/types/api";
 import { toast } from "sonner";
@@ -119,31 +73,6 @@ export default function UsersManagePage() {
         statusFilter === "all" || user.status === statusFilter;
       return matchesSearch && matchesStatus;
     }) || [];
-
-  // 格式化日期
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  // 获取状态颜色
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "active":
-        return "bg-green-100 text-green-800 hover:bg-green-200";
-      case "inactive":
-        return "bg-red-100 text-red-800 hover:bg-red-200";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
-      default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-200";
-    }
-  };
 
   // 处理创建用户
   const handleCreateUser = async (userData: CreateUserRequest) => {
@@ -245,101 +174,15 @@ export default function UsersManagePage() {
         </div>
 
         {/* 统计卡片 */}
-        {pagination && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">总用户数</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{pagination.total}</div>
-                <p className="text-xs text-muted-foreground">
-                  系统中的所有用户
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">当前页</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{pagination.page}</div>
-                <p className="text-xs text-muted-foreground">
-                  共 {pagination.total_pages} 页
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">活跃用户</CardTitle>
-                <UserCheck className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {filteredUsers.filter((u) => u.status === "active").length}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  状态为活跃的用户
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">每页显示</CardTitle>
-                <UserX className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{pagination.page_size}</div>
-                <p className="text-xs text-muted-foreground">当前页面大小</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        <UserStatsCards pagination={pagination} users={filteredUsers} />
 
         {/* 搜索和过滤 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>搜索和过滤</CardTitle>
-            <CardDescription>使用下面的工具来搜索和过滤用户</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-4 md:flex-row md:items-center">
-              <div className="flex-1">
-                <Label htmlFor="search" className="sr-only">
-                  搜索用户
-                </Label>
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="搜索用户名或邮箱..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="status-filter" className="text-sm font-medium">
-                  状态:
-                </Label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-32" id="status-filter">
-                    <SelectValue placeholder="选择状态" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部</SelectItem>
-                    <SelectItem value="active">活跃</SelectItem>
-                    <SelectItem value="inactive">非活跃</SelectItem>
-                    <SelectItem value="pending">待审核</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <UserSearchFilter
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+        />
 
         {/* 用户表格 */}
         <Card>
