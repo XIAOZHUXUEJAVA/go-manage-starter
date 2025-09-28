@@ -8,7 +8,7 @@ import {
   CheckUserExistsRequest,
   UserValidationResult,
 } from "@/types/user";
-import { useAuthStore } from "@/stores/authStore";
+import { ApiService } from "@/lib/api";
 
 // 后端分页响应格式
 interface BackendPaginatedResponse<T> {
@@ -29,9 +29,6 @@ interface BackendAvailabilityResponse {
 }
 
 export class UserApiService {
-  private static readonly BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000/api/v1";
-
   /**
    * 获取用户列表
    */
@@ -39,32 +36,18 @@ export class UserApiService {
     params?: UserQueryParams
   ): Promise<APIResponse<User[]>> {
     try {
-      const queryParams = new URLSearchParams();
-      if (params?.page) queryParams.append("page", params.page.toString());
-      if (params?.pageSize)
-        queryParams.append("page_size", params.pageSize.toString());
-      if (params?.search) queryParams.append("search", params.search);
-      if (params?.role && params.role !== "all")
-        queryParams.append("role", params.role);
+      const queryParams: Record<string, string> = {};
+      if (params?.page) queryParams.page = params.page.toString();
+      if (params?.pageSize) queryParams.page_size = params.pageSize.toString();
+      if (params?.search) queryParams.search = params.search;
+      if (params?.role && params.role !== "all") queryParams.role = params.role;
       if (params?.status && params.status !== "all")
-        queryParams.append("status", params.status);
+        queryParams.status = params.status;
 
-      const url = `${this.BASE_URL}/users${
-        queryParams.toString() ? "?" + queryParams.toString() : ""
-      }`;
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.getToken()}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result: BackendPaginatedResponse<User> = await response.json();
+      const result = await ApiService.get<BackendPaginatedResponse<User>>(
+        "/users",
+        queryParams
+      );
 
       return {
         code: result.code,
@@ -88,20 +71,7 @@ export class UserApiService {
    */
   static async getUserById(id: number): Promise<APIResponse<User>> {
     try {
-      const response = await fetch(`${this.BASE_URL}/users/${id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.getToken()}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result;
+      return await ApiService.get<User>(`/users/${id}`);
     } catch (error) {
       console.error("获取用户详情失败:", error);
       throw error;
@@ -115,21 +85,7 @@ export class UserApiService {
     userData: CreateUserRequest
   ): Promise<APIResponse<User>> {
     try {
-      const response = await fetch(`${this.BASE_URL}/users`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.getToken()}`,
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result;
+      return await ApiService.post<User>("/users", userData);
     } catch (error) {
       console.error("创建用户失败:", error);
       throw error;
@@ -144,21 +100,7 @@ export class UserApiService {
     userData: UpdateUserRequest
   ): Promise<APIResponse<User>> {
     try {
-      const response = await fetch(`${this.BASE_URL}/users/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.getToken()}`,
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result;
+      return await ApiService.put<User>(`/users/${id}`, userData);
     } catch (error) {
       console.error("更新用户失败:", error);
       throw error;
@@ -170,20 +112,7 @@ export class UserApiService {
    */
   static async deleteUser(id: number): Promise<APIResponse<void>> {
     try {
-      const response = await fetch(`${this.BASE_URL}/users/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.getToken()}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result;
+      return await ApiService.delete<void>(`/users/${id}`);
     } catch (error) {
       console.error("删除用户失败:", error);
       throw error;
@@ -216,22 +145,9 @@ export class UserApiService {
     username: string
   ): Promise<APIResponse<{ available: boolean; message?: string }>> {
     try {
-      const response = await fetch(
-        `${this.BASE_URL}/users/check-username/${encodeURIComponent(username)}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+      const result = await ApiService.get<BackendAvailabilityResponse>(
+        `/users/check-username/${encodeURIComponent(username)}`
       );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result: APIResponse<BackendAvailabilityResponse> =
-        await response.json();
 
       return {
         code: result.code,
@@ -254,22 +170,9 @@ export class UserApiService {
     email: string
   ): Promise<APIResponse<{ available: boolean; message?: string }>> {
     try {
-      const response = await fetch(
-        `${this.BASE_URL}/users/check-email/${encodeURIComponent(email)}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+      const result = await ApiService.get<BackendAvailabilityResponse>(
+        `/users/check-email/${encodeURIComponent(email)}`
       );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result: APIResponse<BackendAvailabilityResponse> =
-        await response.json();
 
       return {
         code: result.code,
@@ -292,26 +195,11 @@ export class UserApiService {
     params: CheckUserExistsRequest
   ): Promise<APIResponse<UserValidationResult>> {
     try {
-      const response = await fetch(
-        `${this.BASE_URL}/users/check-availability`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: params.username,
-            email: params.email,
-            exclude_user_id: params.excludeId,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
+      const result = await ApiService.post<any>("/users/check-availability", {
+        username: params.username,
+        email: params.email,
+        exclude_user_id: params.excludeId,
+      });
 
       // 转换后端响应格式为前端期望的格式
       const isValid =
@@ -391,22 +279,5 @@ export class UserApiService {
       message: "获取角色列表成功",
       data: ["admin", "editor", "user"],
     };
-  }
-
-  /**
-   * 获取存储的JWT token
-   */
-  private static getToken(): string {
-    if (typeof window !== "undefined") {
-      // 优先从Zustand store获取token
-      try {
-        const store = useAuthStore.getState();
-        return store.token || "";
-      } catch {
-        // 如果Zustand不可用，回退到localStorage
-        return localStorage.getItem("auth-token") || "";
-      }
-    }
-    return "";
   }
 }
