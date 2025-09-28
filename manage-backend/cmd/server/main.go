@@ -6,6 +6,7 @@ import (
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/middleware"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/database"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/pkg/logger"
+	_ "github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/docs" // 导入生成的 docs
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"

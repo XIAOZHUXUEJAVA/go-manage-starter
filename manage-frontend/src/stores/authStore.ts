@@ -85,13 +85,11 @@ export const useAuthStore = create<AuthStore>()(
           if (error.code === 401) {
             if (error.error === "invalid credentials") {
               errorMessage = "用户名或密码错误，请检查后重试";
-            } else if (error.error === "user not found") {
-              errorMessage = "用户不存在，请检查用户名";
-            } else if (error.error === "account disabled") {
-              errorMessage = "账户已被禁用，请联系管理员";
             } else {
               errorMessage = "认证失败，请检查用户名和密码";
             }
+          } else if (error.code === 400) {
+            errorMessage = "请求参数错误，请检查输入信息";
           } else if (error.code === 429) {
             errorMessage = "登录尝试过于频繁，请稍后再试";
           } else if (error.code === 500) {

@@ -56,8 +56,22 @@ apiClient.interceptors.response.use(
   async (error: AxiosError<APIResponse>) => {
     const originalRequest = error.config as any;
 
-    // 401 未授权处理
+    // 401 未授权处理 - 但排除登录和注册接口
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // 如果是登录或注册接口的401错误，直接抛出，让业务逻辑处理
+      const isAuthEndpoint =
+        originalRequest.url?.includes("/auth/login") ||
+        originalRequest.url?.includes("/auth/register");
+
+      if (isAuthEndpoint) {
+        // 统一错误处理
+        const apiError: APIError = {
+          code: error.response?.data?.code || error.response?.status || 500,
+          message: error.response?.data?.message || error.message || "请求失败",
+          error: error.response?.data?.error,
+        };
+        return Promise.reject(apiError);
+      }
       if (isRefreshing) {
         // 如果正在刷新token，将请求加入队列
         return new Promise((resolve, reject) => {
