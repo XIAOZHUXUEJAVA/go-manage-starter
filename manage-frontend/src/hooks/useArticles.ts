@@ -1,7 +1,7 @@
 // 文章管理 Hook
 import { useState, useEffect, useCallback } from "react";
 import { Article, PaginationInfo } from "@/types/api";
-import { ArticleService } from "@/services/articleService";
+import { articleApi } from "@/api";
 
 interface UseArticlesParams {
   page?: number;
@@ -43,7 +43,7 @@ export const useArticles = (
         const mergedParams = { ...currentParams, ...params };
         setCurrentParams(mergedParams);
 
-        const response = await ArticleService.getArticles(mergedParams);
+        const response = await articleApi.getArticles(mergedParams);
 
         if (response.code === 200 && response.data) {
           setArticles(response.data);
@@ -70,13 +70,13 @@ export const useArticles = (
   // 获取分类和标签
   const fetchMetadata = useCallback(async () => {
     try {
-      const [categoriesData, tagsData] = await Promise.all([
-        ArticleService.getCategories(),
-        ArticleService.getPopularTags(),
+      const [categoriesResponse, tagsResponse] = await Promise.all([
+        articleApi.getCategories(),
+        articleApi.getPopularTags(),
       ]);
 
-      setCategories(categoriesData);
-      setPopularTags(tagsData);
+      setCategories(categoriesResponse.data?.map((cat) => cat.name) || []);
+      setPopularTags(tagsResponse.data?.map((tag) => tag.name) || []);
     } catch (err) {
       console.error("获取元数据失败:", err);
     }

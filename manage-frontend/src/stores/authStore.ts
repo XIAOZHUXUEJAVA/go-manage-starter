@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { AuthStore, LoginRequest, RegisterRequest } from "@/types/auth";
-import { AuthService } from "@/services/authService";
+import { authApi, userApi } from "@/api";
 import { toast } from "sonner";
 import {
   getAccessToken,
@@ -39,7 +39,7 @@ export const useAuthStore = create<AuthStore>()(
           console.log("🔐 Login - 开始登录:", credentials.username);
           set({ isLoading: true });
 
-          const response = await AuthService.login(credentials);
+          const response = await authApi.login(credentials);
           console.log("🔐 Login - API响应:", response);
 
           if (response.data) {
@@ -111,7 +111,7 @@ export const useAuthStore = create<AuthStore>()(
         try {
           set({ isLoading: true });
 
-          const response = await AuthService.register(data);
+          const response = await authApi.register(data);
 
           if (response.data) {
             toast.success("注册成功！请登录");
@@ -156,9 +156,7 @@ export const useAuthStore = create<AuthStore>()(
           if (isTokenExpiringSoon() && refreshToken) {
             console.log("🔄 CheckAuth - Token即将过期，尝试刷新...");
             try {
-              const refreshResponse = await AuthService.refreshToken(
-                refreshToken
-              );
+              const refreshResponse = await authApi.refreshToken(refreshToken);
               if (refreshResponse.data) {
                 const { access_token, expires_in } = refreshResponse.data;
                 const newTokenExpiresAt = Date.now() + expires_in * 1000;
@@ -199,7 +197,7 @@ export const useAuthStore = create<AuthStore>()(
           console.log("🔄 CheckAuth - 开始验证用户信息...");
           set({ isLoading: true });
 
-          const response = await AuthService.getCurrentUser();
+          const response = await userApi.getCurrentUser();
           console.log("✅ CheckAuth - API响应:", response);
 
           if (response.data) {
@@ -245,7 +243,7 @@ export const useAuthStore = create<AuthStore>()(
 
         try {
           // 调用后端登出接口
-          AuthService.logout(refreshToken ?? undefined).catch(() => {
+          authApi.logout(refreshToken ?? undefined).catch(() => {
             // 忽略登出接口错误，继续清除本地状态
           });
         } catch (error) {

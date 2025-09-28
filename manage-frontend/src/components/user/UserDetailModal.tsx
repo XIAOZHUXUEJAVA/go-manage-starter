@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
-import { User } from "@/types/api";
 import { useUser } from "@/hooks/useUsers";
-import { LoadingSpinner, ErrorMessage } from "./LoadingSpinner";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, RefreshCw } from "lucide-react";
 
 interface UserDetailModalProps {
   userId: number | null;
@@ -82,10 +83,19 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
             )}
 
             {error && (
-              <ErrorMessage
-                error={error}
-                onRetry={() => userId && fetchUser(userId)}
-              />
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="flex items-center justify-between">
+                  <span>{error}</span>
+                  <button
+                    onClick={() => userId && fetchUser(userId)}
+                    className="ml-2 inline-flex items-center gap-1 text-sm underline hover:no-underline"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    重试
+                  </button>
+                </AlertDescription>
+              </Alert>
             )}
 
             {user && !loading && !error && (

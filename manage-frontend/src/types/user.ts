@@ -49,3 +49,28 @@ export interface CheckUserExistsRequest {
   email?: string;
   excludeId?: number;
 }
+
+// 检查可用性请求 (对应后端 CheckAvailabilityRequest)
+export interface CheckAvailabilityRequest {
+  username?: string;
+  email?: string;
+  exclude_user_id?: number;
+}
+
+// 可用性结果 (对应后端 AvailabilityResult)
+export interface AvailabilityResult {
+  available: boolean;
+  message?: string;
+}
+
+// 检查可用性响应 (对应后端 CheckAvailabilityResponse)
+export interface CheckAvailabilityResponse {
+  username?: AvailabilityResult;
+  email?: AvailabilityResult;
+}
+
+// 简单可用性响应 (对应后端 SimpleAvailabilityResponse)
+export interface SimpleAvailabilityResponse {
+  available: boolean;
+  message: string;
+}

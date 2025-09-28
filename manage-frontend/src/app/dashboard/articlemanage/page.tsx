@@ -33,7 +33,7 @@ import { ArticleManagementTable } from "@/components/article/ArticleManagementTa
 
 // 导入hooks和服务
 import { useArticles } from "@/hooks/useArticles";
-import { ArticleService } from "@/services/articleService";
+import { articleApi } from "@/api";
 import {
   Article,
   CreateArticleRequest,
@@ -114,7 +114,7 @@ export default function ArticleManagePage() {
   const handleCreateArticle = async (articleData: CreateArticleRequest) => {
     setLoading(true);
     try {
-      await ArticleService.createArticle(articleData);
+      await articleApi.createArticle(articleData);
       await refetch();
       setAddModalOpen(false);
     } catch (error) {
@@ -131,7 +131,7 @@ export default function ArticleManagePage() {
   ) => {
     setLoading(true);
     try {
-      await ArticleService.updateArticle(id, articleData);
+      await articleApi.updateArticle(id, articleData);
       await refetch();
       setEditModalOpen(false);
       setSelectedArticle(null);
@@ -148,7 +148,7 @@ export default function ArticleManagePage() {
 
     setLoading(true);
     try {
-      await ArticleService.deleteArticle(id);
+      await articleApi.deleteArticle(id);
       await refetch();
     } catch (error) {
       console.error("删除文章失败:", error);
