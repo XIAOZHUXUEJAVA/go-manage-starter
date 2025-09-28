@@ -14,35 +14,35 @@ import (
 func SetupRoutes(router *gin.RouterGroup, db *gorm.DB) {
 	cfg := config.Load()
 	
-	// Initialize JWT manager with configuration
+	// 使用配置初始化 JWT 管理器
 	accessTokenExpire := cfg.JWT.AccessTokenExpire
 	refreshTokenExpire := cfg.JWT.RefreshTokenExpire
 	
-	// Fallback to default values if not configured
+	// 如果未配置则回退到默认值
 	if accessTokenExpire == 0 {
-		accessTokenExpire = 30 // 30 minutes
+		accessTokenExpire = 30 // 默认 30 分钟
 	}
 	if refreshTokenExpire == 0 {
-		refreshTokenExpire = 720 // 30 days in hours
+		refreshTokenExpire = 720 // 默认 30 天（小时数）
 	}
 	
 	jwtManager := auth.NewJWTManager(cfg.JWT.Secret, accessTokenExpire, refreshTokenExpire)
 
-	// Initialize Redis client
+	// 初始化 Redis 客户端
 	redisClient := cache.NewRedisClient(cfg.Redis)
 
-	// Initialize repositories
+	// 初始化仓储层
 	userRepo := repository.NewUserRepository(db)
 
-	// Initialize services
+	// 初始化服务层
 	sessionService := service.NewSessionService(redisClient, jwtManager)
 	userService := service.NewUserService(userRepo, jwtManager, sessionService)
 
-	// Initialize handlers
+	// 初始化处理器
 	userHandler := NewUserHandler(userService)
 
 
-	// User availability check routes (no authentication required)
+	// 用户可用性检查路由（无需认证）
 	userCheck := router.Group("/users")
 	{
 		userCheck.GET("/check-username/:username", userHandler.CheckUsernameAvailable)
@@ -50,7 +50,7 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB) {
 		userCheck.POST("/check-availability", userHandler.CheckUserDataAvailability)
 	}
 
-	// Auth routes (no authentication required)
+	// 认证路由（无需认证）
 	authRoutes := router.Group("/auth")
 	{
 		authRoutes.POST("/register", userHandler.Register)
@@ -58,17 +58,17 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB) {
 		authRoutes.POST("/refresh", userHandler.RefreshToken)
 	}
 
-	// Protected routes (authentication required)
+	// 受保护的路由（需要认证）
 	protected := router.Group("/")
 	protected.Use(middleware.JWTAuthWithSession(jwtManager, sessionService))
 	{
-		// Auth routes that require authentication
+		// 需要认证的认证路由
 		authProtected := protected.Group("/auth")
 		{
 			authProtected.POST("/logout", userHandler.Logout)
 		}
 
-		// User routes
+		// 用户路由
 		users := protected.Group("/users")
 		{
 			users.GET("/profile", userHandler.GetProfile)
