@@ -9,9 +9,6 @@ export interface User {
   updated_at: string;
 }
 
-// 用户列表响应
-export type UserListResponse = User[];
-
 // 创建用户请求
 export interface CreateUserRequest {
   username: string;

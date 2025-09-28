@@ -1,12 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { UserService } from "@/services";
-import {
-  User,
-  UserListResponse,
-  PaginationParams,
-  PaginationInfo,
-  APIError,
-} from "@/types/api";
+import { userApi } from "@/api";
+import { User, PaginationParams, PaginationInfo, APIError } from "@/types/api";
 
 // 用户列表 Hook 的状态类型
 interface UseUsersState {
@@ -45,7 +39,7 @@ export const useUsers = (initialParams?: PaginationParams): UseUsersReturn => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
-        const response = await UserService.getUsers(queryParams);
+        const response = await userApi.getUsers(queryParams);
 
         if (response.code === 200 && response.data) {
           setState((prev) => ({
@@ -116,7 +110,7 @@ export const useUser = (id?: number): UseUserReturn => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
-      const response = await UserService.getUserById(userId);
+      const response = await userApi.getUserById(userId);
 
       if (response.code === 200 && response.data) {
         setState((prev) => ({

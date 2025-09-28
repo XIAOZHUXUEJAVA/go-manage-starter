@@ -65,7 +65,7 @@ import {
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { UserManagementTable } from "@/components/user/UserManagementTable";
 import { AddUserModal } from "@/components/user/AddUserModal";
-import { UserService } from "@/services";
+import { userApi } from "@/api";
 import { CreateUserRequest, UpdateUserRequest } from "@/types/api";
 import { toast } from "sonner";
 
@@ -149,7 +149,7 @@ export default function UsersManagePage() {
   const handleCreateUser = async (userData: CreateUserRequest) => {
     setIsCreating(true);
     try {
-      const response = await UserService.createUser(userData);
+      const response = await userApi.createUser(userData);
       if (response.code === 201) {
         toast.success("用户创建成功");
         refetch(); // 刷新用户列表
@@ -176,7 +176,7 @@ export default function UsersManagePage() {
         status: user.status,
       };
 
-      const response = await UserService.updateUser(user.id, updateData);
+      const response = await userApi.updateUser(user.id, updateData);
       if (response.code === 200) {
         toast.success("用户更新成功");
         refetch(); // 刷新用户列表
@@ -195,7 +195,7 @@ export default function UsersManagePage() {
   const handleDeleteUser = async (user: User) => {
     setIsDeleting(true);
     try {
-      const response = await UserService.deleteUser(user.id);
+      const response = await userApi.deleteUser(user.id);
       if (response.code === 200) {
         toast.success("用户删除成功");
         refetch(); // 刷新用户列表

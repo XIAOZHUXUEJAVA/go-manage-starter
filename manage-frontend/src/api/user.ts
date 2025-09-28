@@ -85,4 +85,22 @@ export const userApi = {
   ): Promise<APIResponse<User>> => {
     return ApiService.put<User>("/users/profile", data);
   },
+
+  /**
+   * 检查用户名可用性
+   */
+  checkUsernameAvailable: async (
+    username: string
+  ): Promise<APIResponse<CheckAvailabilityResponse>> => {
+    return userApi.checkAvailability({ username });
+  },
+
+  /**
+   * 检查邮箱可用性
+   */
+  checkEmailAvailable: async (
+    email: string
+  ): Promise<APIResponse<CheckAvailabilityResponse>> => {
+    return userApi.checkAvailability({ email });
+  },
 } as const;

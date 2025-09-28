@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import { UserService } from "@/services";
+import { userApi } from "@/api";
 
 // 简单的防抖函数实现
 function debounce<T extends (...args: any[]) => any>(
@@ -65,7 +65,7 @@ export const useUserValidation = (
       }));
 
       try {
-        const response = await UserService.checkUsernameAvailable(username);
+        const response = await userApi.checkUsernameAvailable(username);
         const isAvailable = response.data?.available ?? false;
 
         setUsernameValidation({
@@ -101,7 +101,7 @@ export const useUserValidation = (
       }));
 
       try {
-        const response = await UserService.checkEmailAvailable(email);
+        const response = await userApi.checkEmailAvailable(email);
         const isAvailable = response.data?.available ?? false;
 
         setEmailValidation({

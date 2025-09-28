@@ -1,11 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import {
-  isProtectedRoute,
-  isAuthRoute,
-  isValidJWTFormat,
-  isTokenExpired,
-} from "@/lib/auth";
 
 /**
  * Next.js 中间件
