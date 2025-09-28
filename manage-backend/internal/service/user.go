@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// UserRepositoryInterface defines the interface for user repository
+// UserRepositoryInterface 定义用户仓库接口
 type UserRepositoryInterface interface {
 	Create(user *model.User) error
 	GetByID(id uint) (*model.User, error)
@@ -26,7 +26,7 @@ type UserRepositoryInterface interface {
 	CheckEmailExistsExcludeID(email string, excludeID uint) (bool, error)
 }
 
-// JWTManagerInterface defines the interface for JWT manager
+// JWTManagerInterface 定义 JWT 管理器接口
 type JWTManagerInterface interface {
 	GenerateToken(userID uint, username, role string) (string, error)
 	GenerateTokenPair(userID uint, username, role string) (*auth.TokenPair, error)
@@ -35,7 +35,7 @@ type JWTManagerInterface interface {
 	GetTokenExpiration(claims *auth.Claims) time.Duration
 }
 
-// SessionServiceInterface defines the interface for session service
+// SessionServiceInterface 定义会话服务接口
 type SessionServiceInterface interface {
 	CreateSession(ctx context.Context, userID uint, username, refreshToken, deviceInfo, ipAddress, userAgent string) error
 	GetSession(ctx context.Context, userID uint) (*SessionInfo, error)
@@ -63,19 +63,19 @@ func NewUserService(userRepo UserRepositoryInterface, jwtManager JWTManagerInter
 }
 
 func (s *UserService) Register(req *model.CreateUserRequest) (*model.User, error) {
-	// Check if username already exists
+	// 检查用户名是否已存在
 	_, err := s.userRepo.GetByUsername(req.Username)
 	if err == nil {
 		return nil, errors.New("username already exists")
 	}
 
-	// Check if email already exists
+	// 检查邮箱是否已存在
 	_, err = s.userRepo.GetByEmail(req.Email)
 	if err == nil {
 		return nil, errors.New("email already exists")
 	}
 
-	// Hash password
+	// 加密密码
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (s *UserService) Login(req *model.LoginRequest) (*model.LoginResponse, erro
 	return s.LoginWithContext(context.Background(), req, "", "", "")
 }
 
-// LoginWithContext performs login with session context information
+// LoginWithContext 带会话上下文信息的登录
 func (s *UserService) LoginWithContext(ctx context.Context, req *model.LoginRequest, deviceInfo, ipAddress, userAgent string) (*model.LoginResponse, error) {
 	user, err := s.userRepo.GetByUsername(req.Username)
 	if err != nil {
@@ -118,29 +118,29 @@ func (s *UserService) LoginWithContext(ctx context.Context, req *model.LoginRequ
 		return nil, errors.New("invalid credentials")
 	}
 
-	// Generate token pair
+	// 生成令牌对
 	tokenPair, err := s.jwtManager.GenerateTokenPair(user.ID, user.Username, user.Role)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create session in Redis
+	// 在 Redis 中创建会话
 	if s.sessionService != nil {
 		err = s.sessionService.CreateSession(ctx, user.ID, user.Username, tokenPair.RefreshToken, deviceInfo, ipAddress, userAgent)
 		if err != nil {
 			return nil, err
 		}
 
-		// Set user as active
+		// 设置用户为活跃状态
 		s.sessionService.SetUserActive(ctx, user.ID)
 
-		// Cache user permissions
-		permissions := []string{} // You can extend this based on your permission system
+		// 缓存用户权限
+		permissions := []string{} // 可根据权限系统扩展
 		s.sessionService.CacheUserPermissions(ctx, user.ID, user.Role, permissions)
 	}
 
-	// Create a safe user response without password
-	safeUser := model.User{
+	// 创建安全的用户响应（不包含密码）
+	safeUser := model.UserResponse{
 		ID:        user.ID,
 		Username:  user.Username,
 		Email:     user.Email,
@@ -148,7 +148,6 @@ func (s *UserService) LoginWithContext(ctx context.Context, req *model.LoginRequ
 		Status:    user.Status,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
-		// Password field is intentionally omitted for security
 	}
 
 	return &model.LoginResponse{
@@ -161,31 +160,31 @@ func (s *UserService) LoginWithContext(ctx context.Context, req *model.LoginRequ
 	}, nil
 }
 
-// RefreshToken refreshes the access token using refresh token
+// RefreshToken 使用刷新令牌更新访问令牌
 func (s *UserService) RefreshToken(ctx context.Context, req *model.RefreshTokenRequest) (*model.RefreshTokenResponse, error) {
 	if s.sessionService == nil {
 		return nil, errors.New("session service not available")
 	}
 
-	// Validate refresh token and get session
+	// 验证刷新令牌并获取会话
 	sessionInfo, err := s.sessionService.ValidateRefreshToken(ctx, req.RefreshToken)
 	if err != nil {
 		return nil, errors.New("invalid refresh token")
 	}
 
-	// Generate new access token
-	tokenPair, err := s.jwtManager.GenerateTokenPair(sessionInfo.UserID, sessionInfo.Username, "user") // You might want to get role from session
+	// 生成新的令牌对
+	tokenPair, err := s.jwtManager.GenerateTokenPair(sessionInfo.UserID, sessionInfo.Username, "user") // 角色可从会话中获取
 	if err != nil {
 		return nil, err
 	}
 
-	// Update session with new refresh token
+	// 用新的刷新令牌更新会话
 	err = s.sessionService.CreateSession(ctx, sessionInfo.UserID, sessionInfo.Username, tokenPair.RefreshToken, sessionInfo.DeviceInfo, sessionInfo.IPAddress, sessionInfo.UserAgent)
 	if err != nil {
 		return nil, err
 	}
 
-	// Update last activity
+	// 更新最后活跃时间
 	s.sessionService.UpdateLastActivity(ctx, sessionInfo.UserID)
 
 	return &model.RefreshTokenResponse{
@@ -195,19 +194,19 @@ func (s *UserService) RefreshToken(ctx context.Context, req *model.RefreshTokenR
 	}, nil
 }
 
-// Logout performs user logout
+// Logout 用户登出
 func (s *UserService) Logout(ctx context.Context, userID uint, accessToken string, req *model.LogoutRequest) error {
 	if s.sessionService == nil {
 		return errors.New("session service not available")
 	}
 
-	// Validate and get access token claims
+	// 验证并获取访问令牌声明
 	claims, err := s.jwtManager.ValidateToken(accessToken)
 	if err != nil {
 		return errors.New("invalid access token")
 	}
 
-	// Add access token to blacklist
+	// 将访问令牌加入黑名单
 	expiration := s.jwtManager.GetTokenExpiration(claims)
 	if expiration > 0 {
 		err = s.sessionService.AddTokenToBlacklist(ctx, claims.JTI, expiration)
@@ -216,7 +215,7 @@ func (s *UserService) Logout(ctx context.Context, userID uint, accessToken strin
 		}
 	}
 
-	// If refresh token is provided, validate and blacklist it too
+	// 如果提供了刷新令牌，也验证并拉黑
 	if req.RefreshToken != "" {
 		refreshClaims, err := s.jwtManager.ValidateRefreshToken(req.RefreshToken)
 		if err == nil {
@@ -227,7 +226,7 @@ func (s *UserService) Logout(ctx context.Context, userID uint, accessToken strin
 		}
 	}
 
-	// Delete session
+	// 删除会话
 	return s.sessionService.DeleteSession(ctx, userID)
 }
 

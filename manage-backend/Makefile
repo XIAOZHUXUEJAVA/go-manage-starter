@@ -1,6 +1,9 @@
-.PHONY: help build run test test-unit test-integration test-integration-skip test-connection test-coverage clean dev dev-local run-test run-prod migrate seed docs fmt lint security docker-build docker-run docker-stop db-reset setup ci ci-full env-check
+.PHONY: help build run test migrate seed docs dev dev-local run-test run-prod \
+        test-connection test-connection-dev test-connection-prod \
+        migrate-test migrate-prod seed-test seed-prod \
+        env-check env-check-test env-check-prod env-setup-test env-setup-prod \
+        setup db-reset docker-build docker-run docker-stop
 
-# Default target
 help:
 	@echo "Available commands:"
 	@echo ""
@@ -15,14 +18,10 @@ help:
 	@echo "  run-prod        - Start in PRODUCTION environment"
 	@echo ""
 	@echo "🧪 Testing:"
+	@echo "  test            - Run all tests"
 	@echo "  test-connection - Test database and Redis connections (test env)"
 	@echo "  test-connection-dev - Test connections (development env)"
 	@echo "  test-connection-prod - Test connections (production env)"
-	@echo "  test            - Run all tests"
-	@echo "  test-unit       - Run unit tests only"
-	@echo "  test-integration - Run integration tests only (requires database)"
-	@echo "  test-integration-skip - Skip integration tests (short mode)"
-	@echo "  test-coverage   - Run tests with coverage report"
 	@echo ""
 	@echo "🗄️  Database:"
 	@echo "  migrate         - Run database migrations (development)"
@@ -35,12 +34,8 @@ help:
 	@echo ""
 	@echo "🔧 Environment:"
 	@echo "  env-check       - Check required environment variables"
-	@echo ""
-	@echo "🛠️  Development Tools:"
-	@echo "  docs            - Generate API documentation"
-	@echo "  fmt             - Format code"
-	@echo "  lint            - Lint code"
-	@echo "  security        - Run security check"
+	@echo "  env-setup-test  - Setup .env.test file"
+	@echo "  env-setup-prod  - Setup .env.production file"
 	@echo ""
 	@echo "🐳 Docker:"
 	@echo "  docker-build    - Build Docker image"
@@ -48,10 +43,8 @@ help:
 	@echo "  docker-stop     - Stop Docker Compose"
 	@echo ""
 	@echo "🔧 Utilities:"
-	@echo "  clean           - Clean build artifacts"
 	@echo "  setup           - Full development setup"
-	@echo "  ci              - CI pipeline (without database)"
-	@echo "  ci-full         - Full CI pipeline (with database)"
+
 
 # Build the application
 build:
@@ -94,26 +87,6 @@ test-connection-prod: env-check-prod
 test:
 	go test ./... -v
 
-# Run unit tests only (exclude integration tests)
-test-unit:
-	go test ./internal/... ./pkg/... -short -v
-
-# Run integration tests only (requires database connection)
-test-integration:
-	@echo "Running integration tests (requires database)..."
-	go test ./test/integration/... -v
-
-# Skip integration tests (useful for CI without database)
-test-integration-skip:
-	@echo "Skipping integration tests (short mode)..."
-	go test ./test/integration/... -v -short
-
-# Run tests with coverage
-test-coverage:
-	go test ./... -coverprofile=coverage.out -v
-	go tool cover -html=coverage.out -o coverage.html
-	@echo "Coverage report generated: coverage.html"
-
 # Run database migrations
 migrate:
 	@echo "🗄️ Running database migrations (development)..."
@@ -140,27 +113,10 @@ seed-prod: env-check-prod
 	@echo "🌱 Seeding database (production)..."
 	ENVIRONMENT=production go run ./cmd/seed
 
-# Clean build artifacts
-clean:
-	rm -rf bin/
-	rm -f coverage.out coverage.html
-	rm -f server.log
 
 # Generate API documentation
 docs:
 	swag init -g ./cmd/server/main.go -o ./docs
-
-# Format code
-fmt:
-	go fmt ./...
-
-# Lint code (requires golangci-lint)
-lint:
-	golangci-lint run
-
-# Run security check (requires gosec)
-security:
-	gosec ./...
 
 # Docker commands
 docker-build:
@@ -176,12 +132,8 @@ docker-stop:
 db-reset: migrate seed
 
 # Full development setup
-setup: test-connection migrate seed
+setup: test-connection-dev migrate seed
 	@echo "Development environment setup complete!"
-
-# CI/CD pipeline simulation (without database)
-ci: fmt lint security test-unit test-integration-skip
-	@echo "CI pipeline completed successfully!"
 
 # Environment variable checks
 env-check:
@@ -219,7 +171,3 @@ env-setup-prod:
 	@echo "  # Edit .env.production with your values"
 	@echo "  source .env.production"
 	@echo "  make test-connection-prod"
-
-# Full CI/CD pipeline (with database)
-ci-full: fmt lint security test-unit test-integration
-	@echo "Full CI pipeline completed successfully!"

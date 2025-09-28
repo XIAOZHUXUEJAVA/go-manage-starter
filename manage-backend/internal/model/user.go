@@ -18,6 +18,17 @@ type User struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
+// UserResponse 用户响应结构体（不包含敏感信息）
+type UserResponse struct {
+	ID        uint      `json:"id"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	Role      string    `json:"role"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type CreateUserRequest struct {
 	Username string `json:"username" binding:"required,min=3,max=50"`
 	Email    string `json:"email" binding:"required,email"`
@@ -38,12 +49,12 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	AccessToken      string `json:"access_token"`
-	RefreshToken     string `json:"refresh_token"`
-	ExpiresIn        int64  `json:"expires_in"`        // Access token expiration in seconds
-	RefreshExpiresIn int64  `json:"refresh_expires_in"` // Refresh token expiration in seconds
-	TokenType        string `json:"token_type"`         // Always "Bearer"
-	User             User   `json:"user"`
+	AccessToken      string       `json:"access_token"`
+	RefreshToken     string       `json:"refresh_token"`
+	ExpiresIn        int64        `json:"expires_in"`        // Access token expiration in seconds
+	RefreshExpiresIn int64        `json:"refresh_expires_in"` // Refresh token expiration in seconds
+	TokenType        string       `json:"token_type"`         // Always "Bearer"
+	User             UserResponse `json:"user"`
 }
 
 // RefreshTokenRequest 刷新token请求

@@ -1,17 +1,45 @@
 basePath: /api/v1
 definitions:
+  model.AvailabilityResult:
+    properties:
+      available:
+        type: boolean
+      message:
+        type: string
+    type: object
+  model.CheckAvailabilityRequest:
+    properties:
+      email:
+        type: string
+      exclude_user_id:
+        type: integer
+      username:
+        type: string
+    type: object
+  model.CheckAvailabilityResponse:
+    properties:
+      email:
+        $ref: '#/definitions/model.AvailabilityResult'
+      username:
+        $ref: '#/definitions/model.AvailabilityResult'
+    type: object
   model.CreateUserRequest:
     properties:
       email:
         type: string
       password:
+        minLength: 6
+        type: string
+      role:
         type: string
       username:
+        maxLength: 50
+        minLength: 3
         type: string
     required:
-      - email
-      - password
-      - username
+    - email
+    - password
+    - username
     type: object
   model.LoginRequest:
     properties:
@@ -20,23 +48,65 @@ definitions:
       username:
         type: string
     required:
-      - password
-      - username
+    - password
+    - username
     type: object
   model.LoginResponse:
     properties:
       access_token:
         type: string
       expires_in:
+        description: Access token expiration in seconds
         type: integer
       refresh_expires_in:
+        description: Refresh token expiration in seconds
         type: integer
       refresh_token:
         type: string
       token_type:
+        description: Always "Bearer"
         type: string
       user:
-        $ref: "#/definitions/model.UserResponse"
+        $ref: '#/definitions/model.UserResponse'
+    type: object
+  model.LogoutRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  model.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  model.RefreshTokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      token_type:
+        type: string
+    type: object
+  model.SimpleAvailabilityResponse:
+    properties:
+      available:
+        type: boolean
+    type: object
+  model.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      role:
+        type: string
+      status:
+        type: string
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
     type: object
   model.User:
     properties:
@@ -46,6 +116,10 @@ definitions:
         type: string
       id:
         type: integer
+      role:
+        type: string
+      status:
+        type: string
       updated_at:
         type: string
       username:
@@ -59,6 +133,10 @@ definitions:
         type: string
       id:
         type: integer
+      role:
+        type: string
+      status:
+        type: string
       updated_at:
         type: string
       username:
@@ -74,7 +152,30 @@ definitions:
       message:
         type: string
     type: object
-host: localhost:9000
+  utils.PaginatedResponse:
+    properties:
+      code:
+        type: integer
+      data: {}
+      error:
+        type: string
+      message:
+        type: string
+      pagination:
+        $ref: '#/definitions/utils.PaginationMeta'
+    type: object
+  utils.PaginationMeta:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+host: localhost:8080
 info:
   contact:
     email: support@swagger.io
@@ -91,61 +192,135 @@ paths:
   /auth/login:
     post:
       consumes:
-        - application/json
-      description: 用户登录验证，返回访问令牌
+      - application/json
+      description: Login with username and password
       parameters:
-        - description: 登录信息
-          in: body
-          name: credentials
-          required: true
-          schema:
-            $ref: "#/definitions/model.LoginRequest"
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/model.LoginRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 登录成功
           schema:
             allOf:
-              - $ref: "#/definitions/utils.APIResponse"
-              - properties:
-                  data:
-                    $ref: "#/definitions/model.LoginResponse"
-                type: object
+            - $ref: '#/definitions/utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.LoginResponse'
+              type: object
         "400":
           description: 请求参数错误
           schema:
-            $ref: "#/definitions/utils.APIResponse"
+            $ref: '#/definitions/utils.APIResponse'
         "401":
           description: 认证失败
           schema:
-            $ref: "#/definitions/utils.APIResponse"
+            $ref: '#/definitions/utils.APIResponse'
         "500":
           description: 服务器内部错误
           schema:
-            $ref: "#/definitions/utils.APIResponse"
-      summary: 用户登录
+            $ref: '#/definitions/utils.APIResponse'
+      summary: User login
       tags:
-        - auth
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user and invalidate tokens
+      parameters:
+      - description: Logout request (refresh token optional)
+        in: body
+        name: logout
+        schema:
+          $ref: '#/definitions/model.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登出成功
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: User logout
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh access token using refresh token
+      parameters:
+      - description: Refresh token request
+        in: body
+        name: refresh
+        required: true
+        schema:
+          $ref: '#/definitions/model.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 刷新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.RefreshTokenResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: 刷新token无效
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Refresh access token
+      tags:
+      - auth
   /auth/register:
     post:
       consumes:
-        - application/json
+      - application/json
       description: Register a new user with username, email and password
       parameters:
-        - description: User registration data
-          in: body
-          name: user
-          required: true
-          schema:
-            $ref: "#/definitions/model.CreateUserRequest"
+      - description: User registration data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateUserRequest'
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: "#/definitions/model.User"
+            $ref: '#/definitions/model.User'
         "400":
           description: Bad Request
           schema:
@@ -158,45 +333,381 @@ paths:
             type: object
       summary: Register a new user
       tags:
-        - auth
-  /public/users/{id}:
+      - auth
+  /users:
     get:
-      consumes:
-        - application/json
-      description: 根据用户ID获取用户的基本信息，无需登录验证
+      description: Get list of users with pagination (需要认证)
       parameters:
-        - description: 用户ID
-          in: path
-          name: id
-          required: true
-          type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: 获取成功
           schema:
             allOf:
-              - $ref: "#/definitions/utils.APIResponse"
-              - properties:
-                  data:
-                    $ref: "#/definitions/model.UserResponse"
-                type: object
+            - $ref: '#/definitions/utils.PaginatedResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.UserResponse'
+                  type: array
+              type: object
         "400":
           description: 请求参数错误
           schema:
-            $ref: "#/definitions/utils.APIResponse"
-        "404":
-          description: 用户不存在
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: 未授权
           schema:
-            $ref: "#/definitions/utils.APIResponse"
+            $ref: '#/definitions/utils.APIResponse'
         "500":
           description: 服务器内部错误
           schema:
-            $ref: "#/definitions/utils.APIResponse"
-      summary: 获取用户信息
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List users
       tags:
-        - 公开接口
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user (admin only)
+      parameters:
+      - description: User creation data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.User'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new user
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      description: Delete user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - users
+    get:
+      description: Get user information by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.User'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update user information
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User update data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.User'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user
+      tags:
+      - users
+  /users/check-availability:
+    post:
+      consumes:
+      - application/json
+      description: Batch check username and email availability
+      parameters:
+      - description: Data to check
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/model.CheckAvailabilityRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 检查成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.CheckAvailabilityResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Check user data availability
+      tags:
+      - users
+  /users/check-email/{email}:
+    get:
+      description: Check if email is available for registration
+      parameters:
+      - description: Email to check
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 检查成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.SimpleAvailabilityResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Check email availability
+      tags:
+      - users
+  /users/check-username/{username}:
+    get:
+      description: Check if username is available for registration
+      parameters:
+      - description: Username to check
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 检查成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.SimpleAvailabilityResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Check username availability
+      tags:
+      - users
+  /users/profile:
+    get:
+      description: Get current user profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.User'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update current user profile
+      parameters:
+      - description: User update data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user profile
+      tags:
+      - users
 securityDefinitions:
   BearerAuth:
     in: header
