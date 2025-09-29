@@ -52,13 +52,15 @@ type UserService struct {
 	userRepo       UserRepositoryInterface
 	jwtManager     JWTManagerInterface
 	sessionService SessionServiceInterface
+	captchaService CaptchaServiceInterface
 }
 
-func NewUserService(userRepo UserRepositoryInterface, jwtManager JWTManagerInterface, sessionService SessionServiceInterface) *UserService {
+func NewUserService(userRepo UserRepositoryInterface, jwtManager JWTManagerInterface, sessionService SessionServiceInterface, captchaService CaptchaServiceInterface) *UserService {
 	return &UserService{
 		userRepo:       userRepo,
 		jwtManager:     jwtManager,
 		sessionService: sessionService,
+		captchaService: captchaService,
 	}
 }
 
@@ -106,6 +108,13 @@ func (s *UserService) Login(req *model.LoginRequest) (*model.LoginResponse, erro
 
 // LoginWithContext 带会话上下文信息的登录
 func (s *UserService) LoginWithContext(ctx context.Context, req *model.LoginRequest, deviceInfo, ipAddress, userAgent string) (*model.LoginResponse, error) {
+	// 验证验证码
+	if s.captchaService != nil {
+		if !s.captchaService.VerifyCaptcha(req.CaptchaID, req.CaptchaCode) {
+			return nil, errors.New("invalid captcha")
+		}
+	}
+
 	user, err := s.userRepo.GetByUsername(req.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

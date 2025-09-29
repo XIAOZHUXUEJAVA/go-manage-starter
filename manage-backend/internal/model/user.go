@@ -44,8 +44,10 @@ type UpdateUserRequest struct {
 }
 
 type LoginRequest struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Username    string `json:"username" binding:"required"`
+	Password    string `json:"password" binding:"required"`
+	CaptchaID   string `json:"captcha_id" binding:"required"`
+	CaptchaCode string `json:"captcha_code" binding:"required"`
 }
 
 type LoginResponse struct {
@@ -96,4 +98,10 @@ type CheckAvailabilityResponse struct {
 // SimpleAvailabilityResponse 简单可用性响应
 type SimpleAvailabilityResponse struct {
 	Available bool `json:"available"`
+}
+
+// CaptchaResponse 验证码响应
+type CaptchaResponse struct {
+	CaptchaID   string `json:"captcha_id"`
+	CaptchaData string `json:"captcha_data"`
 }

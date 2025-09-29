@@ -8,12 +8,13 @@ import (
 )
 
 type Config struct {
-	Environment string   `mapstructure:"environment"`
-	Port        string   `mapstructure:"port"`
-	LogLevel    string   `mapstructure:"log_level"`
-	Database    Database `mapstructure:"database"`
-	Redis       Redis    `mapstructure:"redis"`
-	JWT         JWT      `mapstructure:"jwt"`
+	Environment string        `mapstructure:"environment"`
+	Port        string        `mapstructure:"port"`
+	LogLevel    string        `mapstructure:"log_level"`
+	Database    Database      `mapstructure:"database"`
+	Redis       Redis         `mapstructure:"redis"`
+	JWT         JWT           `mapstructure:"jwt"`
+	Captcha     CaptchaConfig `mapstructure:"captcha"`
 }
 
 type Database struct {

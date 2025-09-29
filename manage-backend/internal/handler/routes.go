@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/middleware"
@@ -36,10 +38,39 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB) {
 
 	// 初始化服务层
 	sessionService := service.NewSessionService(redisClient, jwtManager)
-	userService := service.NewUserService(userRepo, jwtManager, sessionService)
+	
+	// 验证码配置
+	captchaConfig := service.CaptchaConfig{
+		Type:            cfg.Captcha.Type,
+		Length:          cfg.Captcha.Length,
+		Width:           cfg.Captcha.Width,
+		Height:          cfg.Captcha.Height,
+		NoiseCount:      cfg.Captcha.NoiseCount,
+		ShowLineOptions: cfg.Captcha.ShowLineOptions,
+		Expiration:      cfg.Captcha.Expiration,
+		Enabled:         cfg.Captcha.Enabled,
+	}
+	
+	// 如果配置为空，使用默认配置
+	if captchaConfig.Type == "" {
+		captchaConfig = service.CaptchaConfig{
+			Type:            "digit",
+			Length:          5,
+			Width:           240,
+			Height:          80,
+			NoiseCount:      0.7,
+			ShowLineOptions: 80,
+			Expiration:      5 * time.Minute,
+			Enabled:         true,
+		}
+	}
+	
+	captchaService := service.NewCaptchaService(redisClient.GetClient(), captchaConfig)
+	userService := service.NewUserService(userRepo, jwtManager, sessionService, captchaService)
 
 	// 初始化处理器
 	userHandler := NewUserHandler(userService)
+	captchaHandler := NewCaptchaHandler(captchaService)
 
 
 	// 用户可用性检查路由（无需认证）
@@ -53,6 +84,7 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB) {
 	// 认证路由（无需认证）
 	authRoutes := router.Group("/auth")
 	{
+		authRoutes.GET("/captcha", captchaHandler.GenerateCaptcha)
 		authRoutes.POST("/register", userHandler.Register)
 		authRoutes.POST("/login", userHandler.Login)
 		authRoutes.POST("/refresh", userHandler.RefreshToken)

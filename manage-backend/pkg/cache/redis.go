@@ -42,3 +42,8 @@ func (r *RedisClient) Exists(ctx context.Context, keys ...string) (int64, error)
 func (r *RedisClient) Close() error {
 	return r.client.Close()
 }
+
+// GetClient 返回底层的 Redis 客户端
+func (r *RedisClient) GetClient() *redis.Client {
+	return r.client
+}

@@ -59,14 +59,14 @@ func (h *UserHandler) Register(c *gin.Context) {
 
 // Login godoc
 // @Summary User login
-// @Description Login with username and password
+// @Description Login with username, password and captcha verification
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param credentials body model.LoginRequest true "Login credentials"
+// @Param credentials body model.LoginRequest true "Login credentials with captcha"
 // @Success 200 {object} utils.APIResponse{data=model.LoginResponse} "登录成功"
 // @Failure 400 {object} utils.APIResponse "请求参数错误"
-// @Failure 401 {object} utils.APIResponse "认证失败"
+// @Failure 401 {object} utils.APIResponse "认证失败或验证码错误"
 // @Failure 500 {object} utils.APIResponse "服务器内部错误"
 // @Router /auth/login [post]
 func (h *UserHandler) Login(c *gin.Context) {
