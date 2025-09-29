@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { AuthStore, LoginRequest, RegisterRequest } from "@/types/auth";
 import { authApi, userApi } from "@/api";
 import { toast } from "sonner";
+import { APIError } from "@/types/common";
 import {
   getAccessToken,
   getRefreshToken,
@@ -74,27 +75,28 @@ export const useAuthStore = create<AuthStore>()(
             console.log("❌ Login - 响应中没有数据");
             set({ isLoading: false });
           }
-        } catch (error: any) {
+        } catch (error) {
           console.error("❌ Login - 登录失败:", error);
           set({ isLoading: false });
 
           // 根据错误类型提供更友好的提示
           let errorMessage = "登录失败，请稍后重试";
 
-          if (error.code === 401) {
-            if (error.error === "invalid credentials") {
+          const apiError = error as APIError;
+          if (apiError.code === 401) {
+            if (apiError.error === "invalid credentials") {
               errorMessage = "用户名或密码错误，请检查后重试";
             } else {
               errorMessage = "认证失败，请检查用户名和密码";
             }
-          } else if (error.code === 400) {
+          } else if (apiError.code === 400) {
             errorMessage = "请求参数错误，请检查输入信息";
-          } else if (error.code === 429) {
+          } else if (apiError.code === 429) {
             errorMessage = "登录尝试过于频繁，请稍后再试";
-          } else if (error.code === 500) {
+          } else if (apiError.code === 500) {
             errorMessage = "服务器错误，请稍后重试";
-          } else if (error.message) {
-            errorMessage = error.message;
+          } else if (apiError.message) {
+            errorMessage = apiError.message;
           }
 
           toast.error(errorMessage, {
@@ -116,9 +118,10 @@ export const useAuthStore = create<AuthStore>()(
             toast.success("注册成功！请登录");
             set({ isLoading: false });
           }
-        } catch (error: any) {
+        } catch (error) {
           set({ isLoading: false });
-          const errorMessage = error.message || "注册失败，请稍后重试";
+          const apiError = error as APIError;
+          const errorMessage = apiError.message || "注册失败，请稍后重试";
           toast.error(errorMessage);
           throw error;
         }
@@ -220,7 +223,7 @@ export const useAuthStore = create<AuthStore>()(
               isLoading: false,
             });
           }
-        } catch (error: any) {
+        } catch (error) {
           console.error("❌ CheckAuth - 错误:", error);
           // Token 无效，清除认证状态
           set({

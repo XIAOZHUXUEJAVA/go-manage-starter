@@ -4,6 +4,35 @@
  */
 
 /**
+ * 验证 JWT token 格式
+ */
+export function isValidJWTFormat(token: string): boolean {
+  const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/;
+  return jwtRegex.test(token);
+}
+
+// JWT Payload 类型定义
+interface JWTPayload {
+  user_id: number;
+  username: string;
+  role: string;
+  exp: number; // 过期时间戳
+  iat: number; // 签发时间戳
+  jti: string; // JWT ID
+  [key: string]: unknown; // 允许其他字段
+}
+
+// 用户信息类型（从token解析）
+interface TokenUserInfo {
+  id: number;
+  username: string;
+  role: string;
+  exp: number;
+  iat: number;
+  jti: string;
+}
+
+/**
  * 获取存储的访问token
  * @returns access token字符串或null
  */
@@ -125,13 +154,30 @@ export function isTokenExpiringSoon(): boolean {
 }
 
 /**
+ * 检查指定token是否过期（基于JWT payload）
+ * @param token - JWT token
+ * @returns 是否过期
+ */
+export function isTokenExpired(token: string): boolean {
+  const payload = parseJWTPayload(token);
+  if (!payload || !payload.exp) {
+    return true;
+  }
+
+  const currentTime = Math.floor(Date.now() / 1000);
+  return payload.exp < currentTime;
+}
+
+/**
  * 解析JWT payload（不验证签名，仅用于客户端显示）
  * @param token - JWT token
  * @returns payload对象或null
  */
-export function parseJWTPayload(token: string): any {
+export function parseJWTPayload(token: string): JWTPayload | null {
   try {
     const base64Url = token.split(".")[1];
+    if (!base64Url) return null;
+
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
       atob(base64)
@@ -139,7 +185,7 @@ export function parseJWTPayload(token: string): any {
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
         .join("")
     );
-    return JSON.parse(jsonPayload);
+    return JSON.parse(jsonPayload) as JWTPayload;
   } catch (error) {
     return null;
   }
@@ -149,7 +195,7 @@ export function parseJWTPayload(token: string): any {
  * 获取当前用户信息（从access token中解析）
  * @returns 用户信息或null
  */
-export function getCurrentUserFromToken(): any {
+export function getCurrentUserFromToken(): TokenUserInfo | null {
   const accessToken = getAccessToken();
   if (!accessToken) return null;
 

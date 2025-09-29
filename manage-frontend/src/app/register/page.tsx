@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { userSchemas, type RegisterFormData } from "@/lib/validations";
-import { useUserValidation } from "@/hooks/useUserValidation";
+import { useAvailabilityCheck } from "@/hooks/useUserValidation";
 
 // 使用统一的注册验证 schema
 const registerSchema = userSchemas.register;
@@ -56,11 +55,11 @@ export default function RegisterPage({ className }: RegisterFormProps) {
   const router = useRouter();
   const { register: registerUser, isLoading } = useAuthStore();
   const {
-    checkUsername,
-    checkEmail,
-    usernameValidation: hookUsernameValidation,
-    emailValidation: hookEmailValidation,
-  } = useUserValidation();
+    checkUsernameAvailability,
+    checkEmailAvailability,
+    usernameAvailability: hookUsernameAvailability,
+    emailAvailability: hookEmailAvailability,
+  } = useAvailabilityCheck();
 
   const {
     register,
@@ -77,7 +76,7 @@ export default function RegisterPage({ className }: RegisterFormProps) {
   // 实时验证用户名
   useEffect(() => {
     if (watchedUsername && watchedUsername.length >= 3) {
-      checkUsername(watchedUsername);
+      checkUsernameAvailability(watchedUsername);
     } else {
       // 当输入为空或长度不足时，重置验证状态
       setUsernameValidation({
@@ -86,12 +85,12 @@ export default function RegisterPage({ className }: RegisterFormProps) {
         message: undefined,
       });
     }
-  }, [watchedUsername, checkUsername]);
+  }, [watchedUsername, checkUsernameAvailability]);
 
   // 实时验证邮箱
   useEffect(() => {
     if (watchedEmail && watchedEmail.includes("@")) {
-      checkEmail(watchedEmail);
+      checkEmailAvailability(watchedEmail);
     } else {
       // 当输入为空或格式不正确时，重置验证状态
       setEmailValidation({
@@ -100,25 +99,25 @@ export default function RegisterPage({ className }: RegisterFormProps) {
         message: undefined,
       });
     }
-  }, [watchedEmail, checkEmail]);
+  }, [watchedEmail, checkEmailAvailability]);
 
   // 同步用户名验证状态
   useEffect(() => {
     setUsernameValidation({
-      isValidating: hookUsernameValidation.isChecking,
-      isValid: hookUsernameValidation.isAvailable !== false,
-      message: hookUsernameValidation.message,
+      isValidating: hookUsernameAvailability.isChecking,
+      isValid: hookUsernameAvailability.isAvailable !== false,
+      message: hookUsernameAvailability.message,
     });
-  }, [hookUsernameValidation]);
+  }, [hookUsernameAvailability]);
 
   // 同步邮箱验证状态
   useEffect(() => {
     setEmailValidation({
-      isValidating: hookEmailValidation.isChecking,
-      isValid: hookEmailValidation.isAvailable !== false,
-      message: hookEmailValidation.message,
+      isValidating: hookEmailAvailability.isChecking,
+      isValid: hookEmailAvailability.isAvailable !== false,
+      message: hookEmailAvailability.message,
     });
-  }, [hookEmailValidation]);
+  }, [hookEmailAvailability]);
 
   const onSubmit = async (data: RegisterFormData) => {
     try {

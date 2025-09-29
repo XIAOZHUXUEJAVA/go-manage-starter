@@ -1,7 +1,12 @@
 import { NextRequest } from "next/server";
+import {
+  parseJWTPayload,
+  isValidJWTFormat,
+  isTokenExpired,
+} from "./tokenUtils";
 
 /**
- * 认证工具函数
+ * 认证工具函数 - 专注于路由保护和请求处理
  */
 
 /**
@@ -46,42 +51,8 @@ export function isAuthRoute(pathname: string): boolean {
   return authRoutes.includes(pathname);
 }
 
-/**
- * 验证 JWT token 格式
- */
-export function isValidJWTFormat(token: string): boolean {
-  const jwtRegex = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/;
-  return jwtRegex.test(token);
-}
+// JWT相关函数现在从 tokenUtils 导入，避免重复定义
+// 可以直接使用: isValidJWTFormat, parseJWTPayload, isTokenExpired
 
-/**
- * 解析 JWT payload（不验证签名，仅用于客户端显示）
- */
-export function parseJWTPayload(token: string): any {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch (error) {
-    return null;
-  }
-}
-
-/**
- * 检查 token 是否过期
- */
-export function isTokenExpired(token: string): boolean {
-  const payload = parseJWTPayload(token);
-  if (!payload || !payload.exp) {
-    return true;
-  }
-
-  const currentTime = Math.floor(Date.now() / 1000);
-  return payload.exp < currentTime;
-}
+// 重新导出以保持向后兼容性
+export { isValidJWTFormat, parseJWTPayload, isTokenExpired };

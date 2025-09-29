@@ -24,7 +24,7 @@ import {
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { CreateUserRequest } from "@/types/api";
 import { userSchemas, type CreateUserFormData } from "@/lib/validations";
-import { useUserValidation } from "@/hooks/useUserValidation";
+import { useAvailabilityCheck } from "@/hooks/useUserValidation";
 
 interface AddUserModalProps {
   open: boolean;
@@ -46,12 +46,12 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
 
   // 用户验证 hook
   const {
-    usernameValidation,
-    emailValidation,
-    checkUsername,
-    checkEmail,
-    resetValidation,
-  } = useUserValidation();
+    usernameAvailability,
+    emailAvailability,
+    checkUsernameAvailability,
+    checkEmailAvailability,
+    resetAvailabilityCheck,
+  } = useAvailabilityCheck();
 
   const {
     register,
@@ -74,37 +74,37 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
   // 监听用户名变化并进行实时验证
   useEffect(() => {
     if (usernameValue && usernameValue.length >= 3) {
-      checkUsername(usernameValue);
+      checkUsernameAvailability(usernameValue);
     }
-  }, [usernameValue, checkUsername]);
+  }, [usernameValue, checkUsernameAvailability]);
 
   // 监听邮箱变化并进行实时验证
   useEffect(() => {
     if (emailValue && emailValue.includes("@")) {
-      checkEmail(emailValue);
+      checkEmailAvailability(emailValue);
     }
-  }, [emailValue, checkEmail]);
+  }, [emailValue, checkEmailAvailability]);
 
   // 重置验证状态当模态框关闭时
   useEffect(() => {
     if (!open) {
-      resetValidation();
+      resetAvailabilityCheck();
     }
-  }, [open, resetValidation]);
+  }, [open, resetAvailabilityCheck]);
 
   const handleFormSubmit = async (data: CreateUserFormData) => {
     // 检查用户名和邮箱是否可用
-    if (usernameValidation.isAvailable === false) {
+    if (usernameAvailability.isAvailable === false) {
       return;
     }
-    if (emailValidation.isAvailable === false) {
+    if (emailAvailability.isAvailable === false) {
       return;
     }
 
     try {
       await onSubmit(data);
       reset();
-      resetValidation();
+      resetAvailabilityCheck();
       onOpenChange(false);
     } catch (error) {
       console.error("创建用户失败:", error);
@@ -114,10 +114,10 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
   // 检查是否可以提交表单
   const canSubmit =
     !loading &&
-    usernameValidation.isAvailable !== false &&
-    emailValidation.isAvailable !== false &&
-    !usernameValidation.isChecking &&
-    !emailValidation.isChecking;
+    usernameAvailability.isAvailable !== false &&
+    emailAvailability.isAvailable !== false &&
+    !usernameAvailability.isChecking &&
+    !emailAvailability.isChecking;
 
   const handleClose = () => {
     reset();
@@ -145,14 +145,15 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                   placeholder="请输入用户名"
                   {...register("username")}
                   className={
-                    errors.username || usernameValidation.isAvailable === false
+                    errors.username ||
+                    usernameAvailability.isAvailable === false
                       ? "border-red-500"
-                      : usernameValidation.isAvailable === true
+                      : usernameAvailability.isAvailable === true
                       ? "border-green-500"
                       : ""
                   }
                 />
-                {usernameValidation.isChecking && (
+                {usernameAvailability.isChecking && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
                   </div>
@@ -163,15 +164,15 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                   {errors.username.message}
                 </p>
               )}
-              {!errors.username && usernameValidation.message && (
+              {!errors.username && usernameAvailability.message && (
                 <p
                   className={`text-sm ${
-                    usernameValidation.isAvailable
+                    usernameAvailability.isAvailable
                       ? "text-green-600"
                       : "text-red-500"
                   }`}
                 >
-                  {usernameValidation.message}
+                  {usernameAvailability.message}
                 </p>
               )}
             </div>
@@ -186,14 +187,14 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                   placeholder="请输入邮箱地址"
                   {...register("email")}
                   className={
-                    errors.email || emailValidation.isAvailable === false
+                    errors.email || emailAvailability.isAvailable === false
                       ? "border-red-500"
-                      : emailValidation.isAvailable === true
+                      : emailAvailability.isAvailable === true
                       ? "border-green-500"
                       : ""
                   }
                 />
-                {emailValidation.isChecking && (
+                {emailAvailability.isChecking && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
                   </div>
@@ -202,15 +203,15 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
               {errors.email && (
                 <p className="text-sm text-red-500">{errors.email.message}</p>
               )}
-              {!errors.email && emailValidation.message && (
+              {!errors.email && emailAvailability.message && (
                 <p
                   className={`text-sm ${
-                    emailValidation.isAvailable
+                    emailAvailability.isAvailable
                       ? "text-green-600"
                       : "text-red-500"
                   }`}
                 >
-                  {emailValidation.message}
+                  {emailAvailability.message}
                 </p>
               )}
             </div>
@@ -284,8 +285,8 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   创建中...
                 </>
-              ) : usernameValidation.isChecking ||
-                emailValidation.isChecking ? (
+              ) : usernameAvailability.isChecking ||
+                emailAvailability.isChecking ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   验证中...

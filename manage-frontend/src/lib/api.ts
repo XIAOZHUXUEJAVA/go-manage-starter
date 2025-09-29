@@ -1,4 +1,9 @@
-import axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios";
+import axios, {
+  AxiosInstance,
+  AxiosResponse,
+  AxiosError,
+  InternalAxiosRequestConfig,
+} from "axios";
 import { APIResponse, APIError } from "@/types/api";
 import { RefreshTokenResponse } from "@/types/auth";
 
@@ -14,11 +19,11 @@ const apiClient: AxiosInstance = axios.create({
 // Token刷新状态管理
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (value?: any) => void;
-  reject: (reason?: any) => void;
+  resolve: (value?: string | null) => void;
+  reject: (reason?: unknown) => void;
 }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) {
       reject(error);
@@ -54,7 +59,9 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError<APIResponse>) => {
-    const originalRequest = error.config as any;
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
     // 401 未授权处理 - 但排除登录和注册接口
     if (error.response?.status === 401 && !originalRequest._retry) {
