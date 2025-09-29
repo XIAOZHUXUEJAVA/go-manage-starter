@@ -176,11 +176,7 @@ http://localhost:3000
 - 学习 Go + React 全栈开发
 - 作为其他项目的基础模板
 
-### 快速启动
-
-```bash
-
 ## 许可证
 
 MIT License
-```
+
