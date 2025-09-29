@@ -11,6 +11,7 @@ import {
   RefreshTokenRequest,
   RefreshTokenResponse,
   LogoutRequest,
+  CaptchaResponse,
 } from "@/types/auth";
 
 export const authApi = {
@@ -79,5 +80,12 @@ export const authApi = {
       token,
       new_password: newPassword,
     });
+  },
+
+  /**
+   * 生成验证码
+   */
+  generateCaptcha: async (): Promise<APIResponse<CaptchaResponse>> => {
+    return ApiService.get<CaptchaResponse>("/auth/captcha");
   },
 } as const;

@@ -3,6 +3,8 @@
 export interface LoginRequest {
   username: string;
   password: string;
+  captcha_id?: string;
+  captcha_code?: string;
 }
 
 export interface LoginResponse {
@@ -65,5 +67,28 @@ export interface AuthActions {
   checkAuth: () => Promise<void>;
   setLoading: (loading: boolean) => void;
 }
+
+// 验证码相关类型
+export interface CaptchaResponse {
+  captcha_id: string;
+  captcha_data: string; // base64 图片数据
+}
+
+export interface CaptchaState {
+  captchaId: string | null;
+  captchaImage: string | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface CaptchaActions {
+  generateCaptcha: () => Promise<void>;
+  refreshCaptcha: () => Promise<void>;
+  clearCaptcha: () => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+}
+
+export type CaptchaStore = CaptchaState & CaptchaActions;
 
 export type AuthStore = AuthState & AuthActions;

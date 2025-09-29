@@ -23,16 +23,33 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useAuthStore } from "@/stores/authStore";
+import { useCaptcha, useCaptchaRequired } from "@/hooks/useCaptcha";
+import { Captcha } from "@/components/ui/captcha";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 // 登录表单验证 schema
-const loginSchema = z.object({
-  username: z.string().min(1, "用户名不能为空").min(3, "用户名至少3个字符"),
-  password: z.string().min(1, "密码不能为空").min(6, "密码至少6个字符"),
-});
+const createLoginSchema = (requireCaptcha: boolean) => {
+  const baseSchema = {
+    username: z.string().min(1, "用户名不能为空").min(3, "用户名至少3个字符"),
+    password: z.string().min(1, "密码不能为空").min(6, "密码至少6个字符"),
+  };
 
-type LoginFormData = z.infer<typeof loginSchema>;
+  if (requireCaptcha) {
+    return z.object({
+      ...baseSchema,
+      captcha_code: z.string().min(1, "请输入验证码").min(4, "验证码至少4位"),
+    });
+  }
+
+  return z.object(baseSchema);
+};
+
+type LoginFormData = {
+  username: string;
+  password: string;
+  captcha_code?: string;
+};
 
 export function LoginForm({
   className,
@@ -41,21 +58,70 @@ export function LoginForm({
   const { login, isLoading } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
 
+  // 检查是否需要验证码
+  const requireCaptcha = useCaptchaRequired();
+
+  // 验证码相关状态和方法
+  const {
+    captchaId,
+    captchaCode,
+    setCaptchaCode,
+    isValid: isCaptchaValid,
+    hasRequiredData: hasCaptchaData,
+    refreshCaptcha,
+  } = useCaptcha({
+    autoGenerate: requireCaptcha,
+  });
+
+  // 动态创建验证 schema
+  const loginSchema = createLoginSchema(requireCaptcha);
+
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
       password: "",
+      ...(requireCaptcha && { captcha_code: "" }),
     },
   });
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(data);
+      // 构建登录请求数据
+      const loginData = {
+        username: data.username,
+        password: data.password,
+        ...(requireCaptcha &&
+          captchaId && {
+            captcha_id: captchaId,
+            captcha_code: data.captcha_code || captchaCode,
+          }),
+      };
+
+      console.log("🔐 Login - 提交数据:", {
+        ...loginData,
+        password: "***",
+        captcha_code: loginData.captcha_code ? "***" : undefined,
+      });
+
+      await login(loginData);
       // 登录成功后，AuthGuard 会自动处理重定向，不需要手动跳转
     } catch (error: any) {
-      // 错误处理已在 authStore 中统一处理，这里不需要额外处理
       console.error("Login error:", error);
+
+      // 如果是验证码相关错误，刷新验证码
+      if (
+        requireCaptcha &&
+        (error?.message?.includes("验证码") ||
+          error?.message?.includes("captcha") ||
+          error?.code === 400)
+      ) {
+        console.log("🔄 Login - 验证码错误，刷新验证码");
+        await refreshCaptcha();
+        // 清空验证码输入
+        form.setValue("captcha_code", "");
+        setCaptchaCode("");
+      }
     }
   };
 
@@ -140,6 +206,32 @@ export function LoginForm({
                     </FormItem>
                   )}
                 />
+
+                {/* 验证码字段 - 条件性显示 */}
+                {requireCaptcha && (
+                  <FormField
+                    control={form.control}
+                    name="captcha_code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Captcha
+                            value={field.value || captchaCode}
+                            onChange={(value) => {
+                              field.onChange(value);
+                              setCaptchaCode(value);
+                            }}
+                            error={form.formState.errors.captcha_code?.message}
+                            disabled={isLoading}
+                            required
+                            placeholder="请输入验证码"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 {/* 提交按钮 */}
                 <div className="flex flex-col gap-3">
