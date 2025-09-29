@@ -2,7 +2,6 @@ package handler
 
 import (
 	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/config"
 	"github.com/XIAOZHUXUEJAVA/go-manage-starter/manage-backend/internal/middleware"
@@ -51,6 +50,7 @@ func SetupRoutes(router *gin.RouterGroup, db *gorm.DB) {
 		Enabled:         cfg.Captcha.Enabled,
 	}
 	
+
 	// 如果配置为空，使用默认配置
 	if captchaConfig.Type == "" {
 		captchaConfig = service.CaptchaConfig{

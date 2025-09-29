@@ -20,3 +20,29 @@ jwt:
   expire_time: 24 # Deprecated: for backward compatibility
   access_token_expire: 30 # Access token expiration in minutes
   refresh_token_expire: 720 # Refresh token expiration in hours (30 days)
+
+# 验证码配置示例
+captcha:
+  # 验证码类型: digit(数字), string(字符串), math(数学), chinese(中文)
+  type: "digit"
+
+  # 验证码长度
+  length: 4
+
+  # 图片宽度
+  width: 240
+
+  # 图片高度
+  height: 80
+
+  # 噪点强度 (0.0-1.0)
+  noise_count: 0.7
+
+  # 干扰线数量
+  show_line_options: 80
+
+  # 过期时间 (5分钟)
+  expiration: "5m"
+
+  # 是否启用验证码
+  enabled: true
