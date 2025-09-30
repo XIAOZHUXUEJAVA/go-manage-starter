@@ -18,6 +18,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthStore } from "@/stores/authStore";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/error-handler";
 import {
   Eye,
   EyeOff,
@@ -129,8 +130,10 @@ export default function RegisterPage({ className }: RegisterFormProps) {
       });
       // 注册成功后重定向到登录页面
       router.push("/login");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "注册失败，请重试");
+    } catch (error) {
+      // 使用错误处理工具获取错误消息
+      const errorMessage = getErrorMessage(error, "注册失败，请稍后重试");
+      setError(errorMessage);
     }
   };
 

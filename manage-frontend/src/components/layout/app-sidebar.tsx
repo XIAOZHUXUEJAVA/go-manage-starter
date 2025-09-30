@@ -91,25 +91,25 @@ const data = {
         },
       ],
     },
-    {
-      title: "文章管理",
-      url: "/dashboard/articlemanage",
-      icon: FileText,
-      items: [
-        {
-          title: "文章列表",
-          url: "/dashboard/articlemanage",
-        },
-        {
-          title: "分类管理",
-          url: "/dashboard/articlemanage/categories",
-        },
-        {
-          title: "标签管理",
-          url: "/dashboard/articlemanage/tags",
-        },
-      ],
-    },
+    // {
+    //   title: "文章管理",
+    //   url: "/dashboard/articlemanage",
+    //   icon: FileText,
+    //   items: [
+    //     {
+    //       title: "文章列表",
+    //       url: "/dashboard/articlemanage",
+    //     },
+    //     {
+    //       title: "分类管理",
+    //       url: "/dashboard/articlemanage/categories",
+    //     },
+    //     {
+    //       title: "标签管理",
+    //       url: "/dashboard/articlemanage/tags",
+    //     },
+    //   ],
+    // },
     {
       title: "数据管理",
       url: "#",

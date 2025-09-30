@@ -27,7 +27,6 @@ import { useCaptcha, useCaptchaRequired } from "@/hooks/useCaptcha";
 import { Captcha } from "@/components/ui/captcha";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { APIError } from "@/types/common";
 
 // 登录表单验证 schema
 const createLoginSchema = (requireCaptcha: boolean) => {
@@ -104,28 +103,57 @@ export function LoginForm({
     } catch (error) {
       console.error("Login error:", error);
 
-      // 类型守卫：检查是否为 APIError
-      const isAPIError = (err: unknown): err is APIError => {
-        return (
-          typeof err === "object" &&
-          err !== null &&
-          "code" in err &&
-          "message" in err
-        );
-      };
+      // 登录失败后刷新验证码
+      // 注意：后端在验证验证码时就会删除它（无论后续的用户名密码验证是否成功）
+      // 所以任何登录失败都需要刷新验证码
+      if (requireCaptcha) {
+        await refreshCaptcha();
+        // 清空验证码输入
+        form.setValue("captcha_code", "");
+        setCaptchaCode("");
 
-      // 如果是验证码相关错误，刷新验证码
-      if (requireCaptcha && isAPIError(error)) {
-        const isCaptchaError =
-          error.message?.includes("验证码") ||
-          error.message?.includes("captcha") ||
-          error.code === 400;
+        // 如果是验证码错误，不清空用户名和密码（保持用户输入）
+        // 注意：用户名密码的清空是浏览器的安全行为，我们无法完全阻止
+        // 但我们可以尝试恢复它们
+        const isAPIError = (
+          err: unknown
+        ): err is { message?: string; code?: number; error?: string } => {
+          return (
+            typeof err === "object" &&
+            err !== null &&
+            ("message" in err || "code" in err)
+          );
+        };
 
-        if (isCaptchaError) {
-          await refreshCaptcha();
-          // 清空验证码输入
-          form.setValue("captcha_code", "");
-          setCaptchaCode("");
+        if (isAPIError(error)) {
+          const isCaptchaError =
+            error.message?.includes("验证码") ||
+            error.message?.includes("captcha") ||
+            error.error === "invalid captcha";
+
+          if (isCaptchaError) {
+            // 验证码错误时，尝试保持用户名和密码不变
+            // 注意：这可能无法完全阻止浏览器的自动清空行为
+            const currentUsername = form.getValues("username");
+            const currentPassword = form.getValues("password");
+
+            // 使用 setTimeout 确保在浏览器清空后再恢复
+            // 使用稍长的延迟（100ms）确保在浏览器行为之后执行
+            setTimeout(() => {
+              const usernameAfter = form.getValues("username");
+              const passwordAfter = form.getValues("password");
+
+              // 只有在被清空的情况下才恢复
+              if (!usernameAfter && currentUsername) {
+                form.setValue("username", currentUsername);
+                console.log("🔄 恢复用户名:", currentUsername);
+              }
+              if (!passwordAfter && currentPassword) {
+                form.setValue("password", currentPassword);
+                console.log("🔄 恢复密码");
+              }
+            }, 1);
+          }
         }
       }
     }

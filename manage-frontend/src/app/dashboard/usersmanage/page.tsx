@@ -20,8 +20,9 @@ import {
   UserSearchFilter,
 } from "@/components/user";
 import { userApi } from "@/api";
-import { CreateUserRequest, UpdateUserRequest, APIError } from "@/types/api";
+import { CreateUserRequest, UpdateUserRequest } from "@/types/api";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/error-handler";
 
 /**
  * Dashboard 用户管理页面
@@ -87,8 +88,7 @@ export default function UsersManagePage() {
       }
     } catch (error) {
       console.error("创建用户失败:", error);
-      const apiError = error as APIError;
-      toast.error(apiError.message || "创建用户失败");
+      toast.error(getErrorMessage(error, "创建用户失败，请稍后重试"));
     } finally {
       setIsCreating(false);
     }
@@ -115,8 +115,7 @@ export default function UsersManagePage() {
       }
     } catch (error) {
       console.error("更新用户失败:", error);
-      const apiError = error as APIError;
-      toast.error(apiError.message || "更新用户失败");
+      toast.error(getErrorMessage(error, "更新用户失败，请稍后重试"));
     } finally {
       setIsUpdating(false);
     }
@@ -135,8 +134,7 @@ export default function UsersManagePage() {
       }
     } catch (error) {
       console.error("删除用户失败:", error);
-      const apiError = error as APIError;
-      toast.error(apiError.message || "删除用户失败");
+      toast.error(getErrorMessage(error, "删除用户失败，请稍后重试"));
     } finally {
       setIsDeleting(false);
     }
