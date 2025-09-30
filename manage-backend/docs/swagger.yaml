@@ -43,11 +43,17 @@ definitions:
     type: object
   model.LoginRequest:
     properties:
+      captcha_code:
+        type: string
+      captcha_id:
+        type: string
       password:
         type: string
       username:
         type: string
     required:
+    - captcha_code
+    - captcha_id
     - password
     - username
     type: object
@@ -142,6 +148,13 @@ definitions:
       username:
         type: string
     type: object
+  service.CaptchaResponse:
+    properties:
+      captcha_data:
+        type: string
+      captcha_id:
+        type: string
+    type: object
   utils.APIResponse:
     properties:
       code:
@@ -189,13 +202,35 @@ info:
   title: Go 管理系统启动器 API
   version: "1.0"
 paths:
+  /auth/captcha:
+    get:
+      description: Generate a new captcha image for login verification
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 验证码生成成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/service.CaptchaResponse'
+              type: object
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/utils.APIResponse'
+      summary: Generate captcha
+      tags:
+      - auth
   /auth/login:
     post:
       consumes:
       - application/json
-      description: Login with username and password
+      description: Login with username, password and captcha verification
       parameters:
-      - description: Login credentials
+      - description: Login credentials with captcha
         in: body
         name: credentials
         required: true
@@ -218,7 +253,7 @@ paths:
           schema:
             $ref: '#/definitions/utils.APIResponse'
         "401":
-          description: 认证失败
+          description: 认证失败或验证码错误
           schema:
             $ref: '#/definitions/utils.APIResponse'
         "500":

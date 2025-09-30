@@ -17,16 +17,15 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 }
 
 // Create 新增用户
-// @param user 用户对象
-// @return error 操作是否成功
+// 参数: user - 用户对象
+// 返回: error - 操作是否成功
 func (r *UserRepository) Create(user *model.User) error {
 	return r.db.Create(user).Error
 }
 
 // GetByID 根据 ID 获取用户
-// @param id 用户ID
-// @return *model.User 用户对象
-// @return error 查询是否成功
+// 参数: id - 用户ID
+// 返回: *model.User - 用户对象, error - 查询是否成功
 func (r *UserRepository) GetByID(id uint) (*model.User, error) {
 	var user model.User
 	err := r.db.First(&user, id).Error
@@ -37,9 +36,8 @@ func (r *UserRepository) GetByID(id uint) (*model.User, error) {
 }
 
 // GetByUsername 根据用户名获取用户
-// @param username 用户名
-// @return *model.User 用户对象
-// @return error 查询是否成功
+// 参数: username - 用户名
+// 返回: *model.User - 用户对象, error - 查询是否成功
 func (r *UserRepository) GetByUsername(username string) (*model.User, error) {
 	var user model.User
 	err := r.db.Where("username = ?", username).First(&user).Error
@@ -50,9 +48,8 @@ func (r *UserRepository) GetByUsername(username string) (*model.User, error) {
 }
 
 // GetByEmail 根据邮箱获取用户
-// @param email 邮箱地址
-// @return *model.User 用户对象
-// @return error 查询是否成功
+// 参数: email - 邮箱地址
+// 返回: *model.User - 用户对象, error - 查询是否成功
 func (r *UserRepository) GetByEmail(email string) (*model.User, error) {
 	var user model.User
 	err := r.db.Where("email = ?", email).First(&user).Error
@@ -63,25 +60,22 @@ func (r *UserRepository) GetByEmail(email string) (*model.User, error) {
 }
 
 // Update 更新用户信息
-// @param user 用户对象（需包含ID）
-// @return error 操作是否成功
+// 参数: user - 用户对象（需包含ID）
+// 返回: error - 操作是否成功
 func (r *UserRepository) Update(user *model.User) error {
 	return r.db.Save(user).Error
 }
 
 // Delete 删除用户
-// @param id 用户ID
-// @return error 操作是否成功
+// 参数: id - 用户ID
+// 返回: error - 操作是否成功
 func (r *UserRepository) Delete(id uint) error {
 	return r.db.Delete(&model.User{}, id).Error
 }
 
 // List 分页获取用户列表
-// @param offset 偏移量
-// @param limit 每页数量
-// @return []model.User 用户列表
-// @return int64 总记录数
-// @return error 查询是否成功
+// 参数: offset - 偏移量, limit - 每页数量
+// 返回: []model.User - 用户列表, int64 - 总记录数, error - 查询是否成功
 func (r *UserRepository) List(offset, limit int) ([]model.User, int64, error) {
 	var users []model.User
 	var total int64
@@ -98,9 +92,8 @@ func (r *UserRepository) List(offset, limit int) ([]model.User, int64, error) {
 }
 
 // CheckUsernameExists 检查用户名是否已存在
-// @param username 用户名
-// @return bool 是否存在
-// @return error 查询是否成功
+// 参数: username - 用户名
+// 返回: bool - 是否存在, error - 查询是否成功
 func (r *UserRepository) CheckUsernameExists(username string) (bool, error) {
 	var count int64
 	err := r.db.Model(&model.User{}).Where("username = ?", username).Count(&count).Error
@@ -108,9 +101,8 @@ func (r *UserRepository) CheckUsernameExists(username string) (bool, error) {
 }
 
 // CheckEmailExists 检查邮箱是否已存在
-// @param email 邮箱地址
-// @return bool 是否存在
-// @return error 查询是否成功
+// 参数: email - 邮箱地址
+// 返回: bool - 是否存在, error - 查询是否成功
 func (r *UserRepository) CheckEmailExists(email string) (bool, error) {
 	var count int64
 	err := r.db.Model(&model.User{}).Where("email = ?", email).Count(&count).Error
@@ -118,10 +110,8 @@ func (r *UserRepository) CheckEmailExists(email string) (bool, error) {
 }
 
 // CheckUsernameExistsExcludeID 检查用户名是否已存在（排除指定ID）
-// @param username 用户名
-// @param excludeID 排除的用户ID（用于更新时排除自己）
-// @return bool 是否存在
-// @return error 查询是否成功
+// 参数: username - 用户名, excludeID - 排除的用户ID（用于更新时排除自己）
+// 返回: bool - 是否存在, error - 查询是否成功
 func (r *UserRepository) CheckUsernameExistsExcludeID(username string, excludeID uint) (bool, error) {
 	var count int64
 	err := r.db.Model(&model.User{}).Where("username = ? AND id != ?", username, excludeID).Count(&count).Error
@@ -129,10 +119,8 @@ func (r *UserRepository) CheckUsernameExistsExcludeID(username string, excludeID
 }
 
 // CheckEmailExistsExcludeID 检查邮箱是否已存在（排除指定ID）
-// @param email 邮箱地址
-// @param excludeID 排除的用户ID（用于更新时排除自己）
-// @return bool 是否存在
-// @return error 查询是否成功
+// 参数: email - 邮箱地址, excludeID - 排除的用户ID（用于更新时排除自己）
+// 返回: bool - 是否存在, error - 查询是否成功
 func (r *UserRepository) CheckEmailExistsExcludeID(email string, excludeID uint) (bool, error) {
 	var count int64
 	err := r.db.Model(&model.User{}).Where("email = ? AND id != ?", email, excludeID).Count(&count).Error

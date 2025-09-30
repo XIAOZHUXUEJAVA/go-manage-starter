@@ -24,9 +24,47 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/captcha": {
+            "get": {
+                "description": "Generate a new captcha image for login verification",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Generate captcha",
+                "responses": {
+                    "200": {
+                        "description": "验证码生成成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.CaptchaResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/utils.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
-                "description": "Login with username and password",
+                "description": "Login with username, password and captcha verification",
                 "consumes": [
                     "application/json"
                 ],
@@ -39,7 +77,7 @@ const docTemplate = `{
                 "summary": "User login",
                 "parameters": [
                     {
-                        "description": "Login credentials",
+                        "description": "Login credentials with captcha",
                         "name": "credentials",
                         "in": "body",
                         "required": true,
@@ -74,7 +112,7 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "认证失败",
+                        "description": "认证失败或验证码错误",
                         "schema": {
                             "$ref": "#/definitions/utils.APIResponse"
                         }
@@ -930,10 +968,18 @@ const docTemplate = `{
         "model.LoginRequest": {
             "type": "object",
             "required": [
+                "captcha_code",
+                "captcha_id",
                 "password",
                 "username"
             ],
             "properties": {
+                "captcha_code": {
+                    "type": "string"
+                },
+                "captcha_id": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
                 },
@@ -1076,6 +1122,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.CaptchaResponse": {
+            "type": "object",
+            "properties": {
+                "captcha_data": {
+                    "type": "string"
+                },
+                "captcha_id": {
                     "type": "string"
                 }
             }

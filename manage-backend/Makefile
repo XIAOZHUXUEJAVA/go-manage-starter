@@ -2,7 +2,7 @@
         test-connection test-connection-dev test-connection-prod \
         migrate-test migrate-prod seed-test seed-prod \
         env-check env-check-test env-check-prod env-setup-test env-setup-prod \
-        setup db-reset docker-build docker-run docker-stop
+        setup db-reset
 
 help:
 	@echo "Available commands:"
@@ -36,12 +36,6 @@ help:
 	@echo "  env-check       - Check required environment variables"
 	@echo "  env-setup-test  - Setup .env.test file"
 	@echo "  env-setup-prod  - Setup .env.production file"
-	@echo ""
-	@echo "🐳 Docker:"
-	@echo "  docker-build    - Build Docker image"
-	@echo "  docker-run      - Run with Docker Compose"
-	@echo "  docker-stop     - Stop Docker Compose"
-	@echo ""
 	@echo "🔧 Utilities:"
 	@echo "  setup           - Full development setup"
 
@@ -117,16 +111,6 @@ seed-prod: env-check-prod
 # Generate API documentation
 docs:
 	swag init -g ./cmd/server/main.go -o ./docs
-
-# Docker commands
-docker-build:
-	docker build -t go-manage-starter .
-
-docker-run:
-	docker-compose up -d
-
-docker-stop:
-	docker-compose down
 
 # Database commands
 db-reset: migrate seed
