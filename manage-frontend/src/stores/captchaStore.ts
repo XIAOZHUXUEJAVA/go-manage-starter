@@ -28,15 +28,12 @@ export const useCaptchaStore = create<CaptchaStore>((set, get) => ({
   // 生成验证码
   generateCaptcha: async () => {
     try {
-      console.log("🔐 Captcha - 开始生成验证码");
       set({ isLoading: true, error: null });
 
       const response = await authApi.generateCaptcha();
-      console.log("🔐 Captcha - API响应:", response);
 
       if (response.data) {
         const { captcha_id, captcha_data } = response.data;
-        console.log("🔐 Captcha - 验证码生成成功，ID:", captcha_id);
 
         set({
           captchaId: captcha_id,
@@ -45,7 +42,6 @@ export const useCaptchaStore = create<CaptchaStore>((set, get) => ({
           error: null,
         });
       } else {
-        console.log("❌ Captcha - 响应中没有数据");
         set({
           isLoading: false,
           error: "验证码生成失败",

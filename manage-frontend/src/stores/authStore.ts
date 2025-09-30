@@ -36,21 +36,13 @@ export const useAuthStore = create<AuthStore>()(
       // 用户登录
       login: async (credentials: LoginRequest) => {
         try {
-          console.log("🔐 Login - 开始登录:", credentials.username);
           set({ isLoading: true });
 
           const response = await authApi.login(credentials);
-          console.log("🔐 Login - API响应:", response);
 
           if (response.data) {
             const { access_token, refresh_token, expires_in, user } =
               response.data;
-            console.log(
-              "🔐 Login - 登录成功，用户:",
-              user.username,
-              "Access Token:",
-              access_token ? "已获取" : "未获取"
-            );
 
             // 计算token过期时间
             const tokenExpiresAt = Date.now() + expires_in * 1000;
@@ -67,12 +59,10 @@ export const useAuthStore = create<AuthStore>()(
 
             // 保存tokens到localStorage
             setTokens(access_token, refresh_token, expires_in);
-            console.log("🔐 Login - Tokens已保存到localStorage");
 
             toast.success("登录成功！正在跳转...");
             // 保持 loading 状态，直到 AuthGuard 完成重定向
           } else {
-            console.log("❌ Login - 响应中没有数据");
             set({ isLoading: false });
           }
         } catch (error) {
@@ -134,15 +124,8 @@ export const useAuthStore = create<AuthStore>()(
           const accessToken = getAccessToken();
           const refreshToken = getRefreshToken();
           const tokenExpiresAt = getTokenExpiresAt();
-
-          console.log(
-            "🔍 CheckAuth - Access Token:",
-            accessToken ? "存在" : "不存在"
-          );
-
           // 如果没有 access token，直接设置为未认证状态
           if (!accessToken) {
-            console.log("❌ CheckAuth - 没有access token，设置为未认证状态");
             set({
               user: null,
               accessToken: null,
@@ -156,7 +139,6 @@ export const useAuthStore = create<AuthStore>()(
 
           // 检查token是否即将过期（提前5分钟刷新）
           if (isTokenExpiringSoon() && refreshToken) {
-            console.log("🔄 CheckAuth - Token即将过期，尝试刷新...");
             try {
               const refreshResponse = await authApi.refreshToken(refreshToken);
               if (refreshResponse.data) {
@@ -171,10 +153,8 @@ export const useAuthStore = create<AuthStore>()(
 
                 // 更新localStorage
                 setTokens(access_token, refreshToken, expires_in);
-                console.log("✅ CheckAuth - Token刷新成功");
               }
             } catch (refreshError) {
-              console.error("❌ CheckAuth - Token刷新失败:", refreshError);
               // 刷新失败，清除认证状态
               removeTokens();
               set({
@@ -196,24 +176,17 @@ export const useAuthStore = create<AuthStore>()(
             tokenExpiresAt,
           });
 
-          console.log("🔄 CheckAuth - 开始验证用户信息...");
           set({ isLoading: true });
 
           const response = await userApi.getCurrentUser();
-          console.log("✅ CheckAuth - API响应:", response);
 
           if (response.data) {
-            console.log(
-              "✅ CheckAuth - 认证成功，用户:",
-              response.data.username
-            );
             set({
               user: response.data,
               isAuthenticated: true,
               isLoading: false,
             });
           } else {
-            console.log("❌ CheckAuth - 响应中没有用户数据");
             set({
               user: null,
               accessToken: null,

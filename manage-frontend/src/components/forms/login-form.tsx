@@ -27,6 +27,7 @@ import { useCaptcha, useCaptchaRequired } from "@/hooks/useCaptcha";
 import { Captcha } from "@/components/ui/captcha";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { APIError } from "@/types/common";
 
 // 登录表单验证 schema
 const createLoginSchema = (requireCaptcha: boolean) => {
@@ -98,29 +99,34 @@ export function LoginForm({
           }),
       };
 
-      console.log("🔐 Login - 提交数据:", {
-        ...loginData,
-        password: "***",
-        captcha_code: loginData.captcha_code ? "***" : undefined,
-      });
-
       await login(loginData);
       // 登录成功后，AuthGuard 会自动处理重定向，不需要手动跳转
-    } catch (error: any) {
+    } catch (error) {
       console.error("Login error:", error);
 
+      // 类型守卫：检查是否为 APIError
+      const isAPIError = (err: unknown): err is APIError => {
+        return (
+          typeof err === "object" &&
+          err !== null &&
+          "code" in err &&
+          "message" in err
+        );
+      };
+
       // 如果是验证码相关错误，刷新验证码
-      if (
-        requireCaptcha &&
-        (error?.message?.includes("验证码") ||
-          error?.message?.includes("captcha") ||
-          error?.code === 400)
-      ) {
-        console.log("🔄 Login - 验证码错误，刷新验证码");
-        await refreshCaptcha();
-        // 清空验证码输入
-        form.setValue("captcha_code", "");
-        setCaptchaCode("");
+      if (requireCaptcha && isAPIError(error)) {
+        const isCaptchaError =
+          error.message?.includes("验证码") ||
+          error.message?.includes("captcha") ||
+          error.code === 400;
+
+        if (isCaptchaError) {
+          await refreshCaptcha();
+          // 清空验证码输入
+          form.setValue("captcha_code", "");
+          setCaptchaCode("");
+        }
       }
     }
   };

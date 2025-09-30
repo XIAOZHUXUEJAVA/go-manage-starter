@@ -60,25 +60,11 @@ export function AuthGuard({
 
     const isProtected = isProtectedRoute(pathname);
     const isAuth = isAuthRoute(pathname);
-
-    console.log("🔍 AuthGuard Debug:", {
-      pathname,
-      isProtected: isProtected,
-      isAuth: isAuth,
-      isAuthenticated,
-      isLoading,
-      isInitialized,
-      requiredRole,
-      userRole: user?.role,
-    });
-
     // 首页重定向逻辑
     if (pathname === "/") {
       if (isAuthenticated) {
-        console.log("Redirecting authenticated user from home to dashboard...");
         router.push("/dashboard");
       } else {
-        console.log("Redirecting unauthenticated user from home to login...");
         router.push("/login");
       }
       return;
@@ -86,35 +72,23 @@ export function AuthGuard({
 
     // 如果用户已认证且在认证页面，重定向到 dashboard
     if (isAuth && isAuthenticated) {
-      console.log(
-        "✅ Authenticated user on auth route, redirecting to dashboard:",
-        pathname
-      );
       router.push("/dashboard");
       return;
     }
 
     // 如果是认证路由且用户未认证，允许访问
     if (isAuth && !isAuthenticated) {
-      console.log(
-        "✅ Unauthenticated user on auth route, allowing access:",
-        pathname
-      );
       return;
     }
 
     // 认证检查
     if (isProtected && !isAuthenticated) {
-      console.log("Redirecting to login...");
       router.push(fallbackPath);
       return;
     }
 
     // 角色权限检查
     if (isAuthenticated && requiredRole && user?.role !== requiredRole) {
-      console.log(
-        `Access denied. Required role: ${requiredRole}, User role: ${user?.role}`
-      );
       router.push("/unauthorized");
       return;
     }

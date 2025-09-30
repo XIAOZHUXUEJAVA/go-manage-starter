@@ -14,7 +14,6 @@ export function middleware(request: NextRequest) {
   }
 
   // 只处理明确的服务端重定向需求
-  console.log("Middleware processing:", pathname);
 
   return NextResponse.next();
 }
